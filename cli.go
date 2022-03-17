@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -37,9 +38,8 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 // Clean deletes all methods related to delog in ".go" files under the given directory path
 func (c *Cli) Clean(ctx context.Context, baseDir string) error {
 	return filepath.Walk(baseDir, func(path string, info fs.FileInfo, err error) error {
-		fmt.Printf("path: %s\n", path)
-
 		if strings.HasSuffix(path, ".go") {
+			fmt.Fprintf(os.Stderr, "remove delog from %s\n", path)
 			// might be good running concurrently?
 			return c.sweeper.Clean(ctx, path)
 		}
