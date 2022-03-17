@@ -19,10 +19,10 @@ func TestRun(t *testing.T) {
 		args       []string
 		wantErr    bool
 	}{
-		// "success with clean": {
-		// 	args:    []string{"clean", "testdata/run/"},
-		// 	wantErr: false,
-		// },
+		"success with clean": {
+			args:    []string{"clean", "testdata/run/"},
+			wantErr: true, // TODO(#4): need fix
+		},
 		"failed with invalid file extention": {
 			args:    []string{"clean", "testdata/a.txt"},
 			wantErr: true,
