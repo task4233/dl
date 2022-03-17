@@ -12,13 +12,13 @@ import (
 
 // DeLog structs
 type DeLog struct {
-	*sweeper
+	*Sweeper
 }
 
 // New for running dl package with CLI
 func New() *DeLog {
 	return &DeLog{
-		newSweeper(),
+		NewSweeper(),
 	}
 }
 
@@ -44,7 +44,7 @@ func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
 		if strings.HasSuffix(path, ".go") {
 			fmt.Fprintf(os.Stderr, "remove dl from %s\n", path)
 			// might be good running concurrently?
-			return d.sweeper.Sweep(ctx, path)
+			return d.Sweeper.Sweep(ctx, path)
 		}
 		return nil
 	})
