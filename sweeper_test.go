@@ -50,6 +50,11 @@ func TestClean(t *testing.T) {
 			args:       []string{"clean", "testdata/clean/f.go"},
 			wantErr:    false,
 		},
+		"success with non dl package alias oneliner": {
+			targetPath: "testdata/clean/g.go",
+			args:       []string{"clean", "testdata/clean/f.go"},
+			wantErr:    false,
+		},
 		// fault cases are tested in TestRun
 	}
 

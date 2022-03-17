@@ -58,7 +58,7 @@ func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
 				// in importing only dl
 				if removedIdx == 0 {
 					w.Specs = w.Specs[1:]
-				} else {
+				} else if removedIdx > 0 {
 					w.Specs = append(w.Specs[:removedIdx], w.Specs[removedIdx+1:]...)
 				}
 			}
