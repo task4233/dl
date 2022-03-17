@@ -85,7 +85,7 @@ func main() {
 }
 ```
 
-- invoke `$ git add .`
+- invoke `$ git commit`
 
 ```bash
 $ git add main.go
@@ -94,9 +94,11 @@ remove dl from main.go # automatically removed
 [master 975ecf9] feat: add main.go
  1 file changed, 12 insertions(+), 21 deletions(-)
  rewrite main.go (91%)
+```
 
 - `delog` is removed automatically
 
+```bash
 $ git diff HEAD^
 diff --git a/main.go b/main.go
 index 90a78bd..0e28e8a 100644
