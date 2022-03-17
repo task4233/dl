@@ -23,7 +23,7 @@ func TestRun(t *testing.T) {
 			args:    []string{"clean", "testdata/run"},
 			wantErr: false,
 		},
-		"no effect with invalid file extention": {
+		"no effect with invalid file extension": {
 			args:    []string{"clean", "testdata/a.txt"},
 			wantErr: false,
 		},

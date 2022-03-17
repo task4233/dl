@@ -11,6 +11,7 @@ func init() {
 	once.Do(extractZip)
 }
 
+// TestClean invokes cli.Clean which invokes sweeper.Sweep inside
 func TestClean(t *testing.T) {
 	t.Parallel()
 

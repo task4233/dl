@@ -18,14 +18,14 @@ type sweeper struct {
 	delogPkgName string
 }
 
-func NewDelog() *sweeper {
+func newDelog() *sweeper {
 	return &sweeper{
 		delogPkgName: "delog", // default package name
 	}
 }
 
-// Clean deletes all methods related to delog
-func (d *sweeper) Clean(ctx context.Context, targetPath string) error {
+// Sweep deletes all methods related to delog
+func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
 	// validation
 	if !strings.HasSuffix(targetPath, ".go") {
 		return fmt.Errorf("targetPath is not .go file: %s", targetPath)

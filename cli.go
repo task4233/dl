@@ -10,17 +10,20 @@ import (
 	"strings"
 )
 
-type Cli struct {
+// Delog structs
+type Delog struct {
 	*sweeper
 }
 
-func New() *Cli {
-	return &Cli{
-		NewDelog(),
+// New for running delog package with CLI
+func New() *Delog {
+	return &Delog{
+		newDelog(),
 	}
 }
 
-func (c *Cli) Run(ctx context.Context, args []string) error {
+// Run executes each method for delog package
+func (c *Delog) Run(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		return errors.New("no argument")
 	}
@@ -36,12 +39,12 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 }
 
 // Clean deletes all methods related to delog in ".go" files under the given directory path
-func (c *Cli) Clean(ctx context.Context, baseDir string) error {
+func (c *Delog) Clean(ctx context.Context, baseDir string) error {
 	return filepath.Walk(baseDir, func(path string, info fs.FileInfo, err error) error {
 		if strings.HasSuffix(path, ".go") {
 			fmt.Fprintf(os.Stderr, "remove delog from %s\n", path)
 			// might be good running concurrently?
-			return c.sweeper.Clean(ctx, path)
+			return c.sweeper.Sweep(ctx, path)
 		}
 		return nil
 	})
