@@ -17,9 +17,9 @@ func FInfo[T any](w io.Writer, v T) (int, error) {
 
 	file = file[strings.LastIndex(file, "/")+1:]
 	if any(v) == nil {
-		return Fprintf(w, "[DeLog] info: nil\n%s:%d\n", file, line)
+		return Fprintf(w, "[DeLog] info: nil %s:%d\n", file, line)
 	}
-	return Fprintf(w, "[DeLog] info: %#v (%T)\n%s:%d\n", v, v, file, line)
+	return Fprintf(w, "[DeLog] info: %#v (%T) %s:%d\n", v, v, file, line)
 }
 
 // Info gives a val, a type, a file name, a line number to print to the standard logger.

@@ -52,7 +52,7 @@ func TestFPrintf(t *testing.T) {
 			}
 
 			if tt.want != out.String() {
-				t.Fatalf("failed TestPrintf, want=%s, got=%s", tt.want, out.String())
+				t.Fatalf("failed TestPrintf, want=%s,got=%s", tt.want, out.String())
 			}
 		})
 	}
@@ -89,7 +89,7 @@ func TestFPrintln(t *testing.T) {
 			}
 
 			if tt.want != out.String() {
-				t.Fatalf("failed TestPrintf, want=%s, got=%s", tt.want, out.String())
+				t.Fatalf("failed TestPrintf, want=%s,got=%s", tt.want, out.String())
 			}
 		})
 	}
@@ -109,19 +109,19 @@ func TestFInfo(t *testing.T) {
 	}{
 		"success with nil": {
 			args: nil,
-			want: "[DeLog] info: nil\nlog_test.go:133\n",
+			want: "[DeLog] info: nil log_test.go:133\n",
 		},
 		"success with untyped int": {
 			args: 1,
-			want: "[DeLog] info: 1 (int)\nlog_test.go:133\n",
+			want: "[DeLog] info: 1 (int) log_test.go:133\n",
 		},
 		"success with a variable": {
 			args: num_,
-			want: "[DeLog] info: 1 (int)\nlog_test.go:133\n",
+			want: "[DeLog] info: 1 (int) log_test.go:133\n",
 		},
 		"success with a nil variable": {
 			args: nil_,
-			want: "[DeLog] info: nil\nlog_test.go:133\n",
+			want: "[DeLog] info: nil log_test.go:133\n",
 		},
 	}
 
@@ -133,7 +133,7 @@ func TestFInfo(t *testing.T) {
 			dl.FInfo(out, tt.args)
 
 			if !strings.Contains(out.String(), tt.want) {
-				t.Fatalf("failed TestPrintf, \nwant=%s, got=%s", tt.want, out.String())
+				t.Fatalf("failed TestPrintf, \nwant=%s,got=%s", tt.want, out.String())
 			}
 		})
 	}
