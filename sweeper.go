@@ -18,7 +18,7 @@ type sweeper struct {
 	delogPkgName string
 }
 
-func NewDelog() *sweeper {
+func newDelog() *sweeper {
 	return &sweeper{
 		delogPkgName: "delog", // default package name
 	}
