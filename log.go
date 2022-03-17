@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Info gives a val, a type, a file name, a line number and writes to w..
+// FInfo gives a val, a type, a file name, a line number and writes to w..
 func FInfo[T any](w io.Writer, v T) (int, error) {
 	_, file, line, ok := runtime.Caller(1)
 	if !ok {
