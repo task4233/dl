@@ -23,7 +23,7 @@ func Example() {
 	//[DeLog] info: 123 (dl_test.MyInt) log_example_test.go:18
 }
 
-func ExampleFInfo(t *testing.T) {
+func ExampleTestFInfo(t *testing.T) {
 	type MyInt int
 	var myNum MyInt = 123
 
@@ -31,4 +31,31 @@ func ExampleFInfo(t *testing.T) {
 
 	// Output:
 	// [DeLog] info: 123 (dl_test.MyInt) log_example_test.go:28
+}
+
+func ExampleTestInfo(t *testing.T) {
+	type MyInt int
+	var myNum MyInt = 123
+
+	dl.Info(myNum) // default output sends to stderr
+
+	// Output:
+}
+
+func ExampleTestPrintf(t *testing.T) {
+	type MyInt int
+	var myNum MyInt = 123
+
+	dl.Printf("%v", myNum) // default output sends to stderr
+
+	// Output:
+}
+
+func ExamplePrintln(t *testing.T) {
+	type MyInt int
+	var myNum MyInt = 123
+
+	dl.Println(myNum) // default output sends to stderr
+
+	// Output:
 }
