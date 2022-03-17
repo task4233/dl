@@ -1,0 +1,22 @@
+name: "New feature"
+description: Propose a new feature to be added to dl 
+labels: ["enhancement", "pending"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill out info.
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Clear and concise description of the problem
+      description: "Write down **goal** and **benefit**."
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: "Any other context or screenshots."
+    validations:
+      required: true

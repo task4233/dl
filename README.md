@@ -112,6 +112,9 @@ index 90a78bd..0e28e8a 100644
  }
 ```
 
+## Contribution
+Please feel free to make [issues](https://github.com/task4233/dl/issues/new/choose) and pull requests.
+
 ## Author
 
 [task4233](https://task4233.dev)

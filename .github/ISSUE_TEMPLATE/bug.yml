@@ -1,0 +1,22 @@
+name: "Bug Report"
+description: Report a bug or a wrong information 
+labels: ["bug", "pending"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill out info.
+  - type: textarea
+    id: Summary
+    attributes:
+      label: Clear and concise description of the problem
+      description: "Write down **summary**."
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: "Any other context, logs or screenshots."
+    validations:
+      required: false
