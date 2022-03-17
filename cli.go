@@ -33,6 +33,11 @@ func (d *DeLog) Run(ctx context.Context, args []string) error {
 			args = append(args, ".")
 		}
 		return d.Clean(ctx, args[1])
+	case "init":
+		if len(args) == 1 {
+			args = append(args, ".")
+		}
+		return d.Init(ctx, args[1])
 	default:
 		return fmt.Errorf("command %s is not implemented", args[0])
 	}
@@ -48,4 +53,31 @@ func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
 		}
 		return nil
 	})
+}
+
+const precommitScript = `#!/bin/sh
+$(echo $GOBIN)/dl clean .
+git add .
+`
+
+// Init inserts dl command into git pre-commit hook
+func (d *DeLog) Init(ctx context.Context, baseDir string) error {
+	path := filepath.Join(baseDir, ".git", "hooks")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return err
+	}
+
+	path = filepath.Join(path, "pre-commit")
+
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if _, err := fmt.Fprintf(f, precommitScript); err != nil {
+		return err
+	}
+
+	return os.Chmod(path, 0755)
 }
