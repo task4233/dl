@@ -1,6 +1,6 @@
 .PHONY: clean
 build:
-	go build -o ./bin/delog -trimpath -mod=readonly ./cmd/delog
+	go build -o ./bin/dl -trimpath -mod=readonly ./cmd/dl
 
 test:
 	go test -v -race -shuffle=on ./...
@@ -10,4 +10,4 @@ test-with-coverage:
 	go tool cover -html=cover.out -o cover.html
 
 clean:
-	rm -rf ./bin/delog
+	rm -rf ./bin/dl

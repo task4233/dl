@@ -1,10 +1,10 @@
-package delog_test
+package dl_test
 
 import (
 	"bytes"
 	"testing"
 
-	"github.com/task4233/delog"
+	"github.com/task4233/dl"
 )
 
 func TestFPrintf(t *testing.T) {
@@ -45,9 +45,9 @@ func TestFPrintf(t *testing.T) {
 
 			out := new(bytes.Buffer)
 			if tt.args == nil {
-				delog.Fprintf(out, tt.message)
+				dl.Fprintf(out, tt.message)
 			} else {
-				delog.Fprintf(out, tt.message, tt.args)
+				dl.Fprintf(out, tt.message, tt.args)
 			}
 
 			if tt.want != out.String() {
@@ -82,9 +82,9 @@ func TestFPrintln(t *testing.T) {
 
 			out := new(bytes.Buffer)
 			if tt.args == nil {
-				delog.Fprintln(out, nil)
+				dl.Fprintln(out, nil)
 			} else {
-				delog.Fprintln(out, tt.args)
+				dl.Fprintln(out, tt.args)
 			}
 
 			if tt.want != out.String() {

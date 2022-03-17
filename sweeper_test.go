@@ -1,4 +1,4 @@
-package delog
+package dl
 
 import (
 	"bytes"
@@ -30,22 +30,22 @@ func TestClean(t *testing.T) {
 			args:       []string{"clean", "testdata/clean/b.go"},
 			wantErr:    false,
 		},
-		"success with only delog package": {
+		"success with only dl package": {
 			targetPath: "testdata/clean/c.go",
 			args:       []string{"clean", "testdata/clean/c.go"},
 			wantErr:    false,
 		},
-		"success with only delog package alias": {
+		"success with only dl package alias": {
 			targetPath: "testdata/clean/d.go",
 			args:       []string{"clean", "testdata/clean/d.go"},
 			wantErr:    false,
 		},
-		"success with delog package oneliner": {
+		"success with dl package oneliner": {
 			targetPath: "testdata/clean/e.go",
 			args:       []string{"clean", "testdata/clean/e.go"},
 			wantErr:    false,
 		},
-		"success with delog package alias oneliner": {
+		"success with dl package alias oneliner": {
 			targetPath: "testdata/clean/f.go",
 			args:       []string{"clean", "testdata/clean/f.go"},
 			wantErr:    false,
@@ -70,8 +70,8 @@ func TestClean(t *testing.T) {
 				if err != nil {
 					t.Fatalf("failed ReadFile: %s", err.Error())
 				}
-				if bytes.Contains(data, []byte("delog")) {
-					t.Fatalf("failed to delete delog from data: \n%s", string(data))
+				if bytes.Contains(data, []byte("dl")) {
+					t.Fatalf("failed to delete dl from data: \n%s", string(data))
 				}
 			}
 		})

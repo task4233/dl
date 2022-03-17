@@ -1,4 +1,4 @@
-package delog
+package dl
 
 import (
 	"context"
@@ -10,20 +10,20 @@ import (
 	"strings"
 )
 
-// Delog structs
-type Delog struct {
+// dl structs
+type dl struct {
 	*sweeper
 }
 
-// New for running delog package with CLI
-func New() *Delog {
-	return &Delog{
-		newDelog(),
+// New for running dl package with CLI
+func New() *dl {
+	return &dl{
+		newdl(),
 	}
 }
 
-// Run executes each method for delog package
-func (c *Delog) Run(ctx context.Context, args []string) error {
+// Run executes each method for dl package
+func (c *dl) Run(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		return errors.New("no argument")
 	}
@@ -38,11 +38,11 @@ func (c *Delog) Run(ctx context.Context, args []string) error {
 	}
 }
 
-// Clean deletes all methods related to delog in ".go" files under the given directory path
-func (c *Delog) Clean(ctx context.Context, baseDir string) error {
+// Clean deletes all methods related to dl in ".go" files under the given directory path
+func (c *dl) Clean(ctx context.Context, baseDir string) error {
 	return filepath.Walk(baseDir, func(path string, info fs.FileInfo, err error) error {
 		if strings.HasSuffix(path, ".go") {
-			fmt.Fprintf(os.Stderr, "remove delog from %s\n", path)
+			fmt.Fprintf(os.Stderr, "remove dl from %s\n", path)
 			// might be good running concurrently?
 			return c.sweeper.Sweep(ctx, path)
 		}

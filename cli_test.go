@@ -1,4 +1,4 @@
-package delog
+package dl
 
 import (
 	"bytes"
@@ -54,8 +54,8 @@ func TestRun(t *testing.T) {
 				if err != nil {
 					t.Fatalf("failed ReadFile: %s", err.Error())
 				}
-				if bytes.Contains(data, []byte("delog")) {
-					t.Fatalf("failed to delete delog from data: \n%s", string(data))
+				if bytes.Contains(data, []byte("dl")) {
+					t.Fatalf("failed to delete dl from data: \n%s", string(data))
 				}
 			}
 		})
