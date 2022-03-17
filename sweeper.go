@@ -126,8 +126,6 @@ func (d *sweeper) removeDelogStmt(statements *[]ast.Stmt) error {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "removedIdxs: %#v\n", removedIdxs)
-
 	for idx := len(removedIdxs) - 1; idx >= 0; idx-- {
 		*statements = append((*statements)[:removedIdxs[idx]], (*statements)[removedIdxs[idx]+1:]...)
 	}

@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
+	"path/filepath"
+	"strings"
 )
 
 type Cli struct {
@@ -23,7 +26,7 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 	switch args[0] {
 	case "clean":
 		if len(args) == 1 {
-			args = append(args, "sandbox/hello.go") // TODO(#4): fix here
+			args = append(args, ".")
 		}
 		return c.Clean(ctx, args[1])
 	default:
@@ -33,13 +36,13 @@ func (c *Cli) Run(ctx context.Context, args []string) error {
 
 // Clean deletes all methods related to delog in ".go" files under the given directory path
 func (c *Cli) Clean(ctx context.Context, baseDir string) error {
-	// TODO(#4): check recursively all files if baseDir is a directory
-	// just in case, run with an assumption: baseDir == a single file
-	targetFilePath := baseDir
+	return filepath.Walk(baseDir, func(path string, info fs.FileInfo, err error) error {
+		fmt.Printf("path: %s\n", path)
 
-	if err := c.sweeper.Clean(ctx, targetFilePath); err != nil {
-		return err
-	}
-
-	return nil
+		if strings.HasSuffix(path, ".go") {
+			// might be good running concurrently?
+			return c.sweeper.Clean(ctx, path)
+		}
+		return nil
+	})
 }
