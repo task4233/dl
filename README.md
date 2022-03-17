@@ -21,26 +21,26 @@ $ go install github.com/task4233/dl/cmd/dl@latest
 ## Use Case
 ### Debug
 
-[Playground](https://go.dev/play/p/DW6BBg2Wd9a)
+[Playground](https://go.dev/play/p/AMgiejJiyN8)
 ```go
 package main
 
 import "github.com/task4233/dl"
 
-type T []int
+type T[T1 any] []T1
 
-func (t T) append(v int) {
+func (t T[T1]) append(v T1) {
 	dl.Printf("Type: %T, v: %v\n", v, v) // This statement can be removed by `$ dl clean main.go`
 	t = append(t, v)
 }
 
-func (t T) change(v int) {
+func (t T[T1]) change(v T1) {
 	dl.Printf("Type: %T, v: %v\n", v, v) // This statement can be removed by `$ dl clean main.go`
 	t[0] = v
 }
 
 func main() {
-	var t T = []int{1, 3}
+	t := T[int]([]int{1, 3})
 	t.append(5)
 	t.change(5)
 }
