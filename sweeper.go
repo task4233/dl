@@ -18,7 +18,7 @@ type sweeper struct {
 	dlPkgName string
 }
 
-func newdl() *sweeper {
+func newSweeper() *sweeper {
 	return &sweeper{
 		dlPkgName: "dl", // default package name
 	}
