@@ -21,11 +21,15 @@ $ go install github.com/task4233/dl/cmd/dl@latest
 ## Use Case
 ### Debug
 
-[Playground](https://go.dev/play/p/0uRBXppq1x4)
+[Playground](https://go.dev/play/p/sMhyVMuPYMc)
 ```go
 package main
 
-import "github.com/task4233/dl"
+import (
+	"os"
+
+	"github.com/task4233/dl"
+)
 
 type T[T1 any] []T1
 
@@ -36,7 +40,7 @@ func (t T[T1]) append(v T1) {
 
 func (t T[T1]) change(v T1) {
 	t[0] = v
-	dl.Info(t)
+	dl.FInfo(os.Stdout, t)
 }
 
 func main() {
