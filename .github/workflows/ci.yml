@@ -3,6 +3,9 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize]
+  push:
+    branches:
+      - main
 
 jobs:
   golangci-lint:
