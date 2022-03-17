@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -21,6 +22,10 @@ func TestRun(t *testing.T) {
 	}{
 		"success with clean": {
 			args:    []string{"clean", "testdata/run"},
+			wantErr: false,
+		},
+		"success with init": {
+			args:    []string{"init", "testdata/run"},
 			wantErr: false,
 		},
 		"no effect with invalid file extension": {
@@ -58,6 +63,55 @@ func TestRun(t *testing.T) {
 					t.Fatalf("failed to delete dl from data: \n%s", string(data))
 				}
 			}
+		})
+	}
+}
+
+func TestInit(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		baseDir string
+		wantErr bool
+	}{
+		"success with": {
+			baseDir: "testdata/init",
+			wantErr: false,
+		},
+		"failed because .git directory does not exists": {
+			baseDir: "testdata/clean", // there is not a .git in ./testdata/clean directory
+			wantErr: true,
+		},
+	}
+
+	for name, tt := range tests {
+		tt := tt
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if err := New().Init(context.Background(), tt.baseDir); err != nil {
+				if (err != nil) != tt.wantErr {
+					t.Fatalf("failed Init: err=%v", err)
+				}
+				return
+			}
+
+			precommitFilePath := filepath.Join(tt.baseDir, ".git", "hooks", "pre-commit")
+
+			if _, err := os.Stat(precommitFilePath); os.IsNotExist(err) {
+				t.Fatalf("failed to create pre-commit script")
+			}
+
+			data, err := os.ReadFile(precommitFilePath)
+			if err != nil {
+				t.Fatalf("failed to read file: %v", err)
+			}
+
+			if !bytes.Contains(data, []byte("dl clean")) {
+				t.Fatalf("pre-commit script is not installed")
+			}
+
 		})
 	}
 }
