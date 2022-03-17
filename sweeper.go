@@ -14,18 +14,18 @@ import (
 
 const dlPath = "\"github.com/task4233/dl\""
 
-type sweeper struct {
+type Sweeper struct {
 	dlPkgName string
 }
 
-func newSweeper() *sweeper {
-	return &sweeper{
+func NewSweeper() *Sweeper {
+	return &Sweeper{
 		dlPkgName: "dl", // default package name
 	}
 }
 
 // Sweep deletes all methods related to dl
-func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
+func (d *Sweeper) Sweep(ctx context.Context, targetPath string) error {
 	// validation
 	if !strings.HasSuffix(targetPath, ".go") {
 		return fmt.Errorf("targetPath is not .go file: %s", targetPath)
@@ -102,7 +102,7 @@ func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
 	return nil
 }
 
-func (d *sweeper) removedlStmt(statements *[]ast.Stmt) error {
+func (d *Sweeper) removedlStmt(statements *[]ast.Stmt) error {
 	removedIdxs := []int{}
 
 	for idx, stmt := range *statements {

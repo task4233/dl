@@ -59,7 +59,7 @@ func TestSweep(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			sweeper := newSweeper()
+			sweeper := NewSweeper()
 
 			err := sweeper.Sweep(context.Background(), tt.targetPath)
 			if err != nil {
