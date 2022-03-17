@@ -1,0 +1,13 @@
+run:
+  deadlint: 5m
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - dupl
+    - gosec
+    - tparallel
