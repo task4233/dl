@@ -1,6 +1,3 @@
-GIT_REF := $(shell git describe --always --tag)
-VERSION ?= $(GIT_REF)
-
 .PHONY: clean
 build:
 	go build -o ./bin/delog -trimpath -mod=readonly ./cmd/delog
@@ -14,4 +11,3 @@ test-with-coverage:
 
 clean:
 	rm -rf ./bin/delog
-	
