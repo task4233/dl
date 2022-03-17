@@ -8,8 +8,19 @@ dl(Debug x Log) - The instant logger package for debug
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 ## Description
+Who doesn't write wrong codes? No one.  
+Then, programs don't work well, and developers write logs for debugging to understand what happens.
 
-dl provides a package for logging instantly such as dubugging and one command to remove them all.
+However, some developers forget to delete their logs after resolving the problem and push their codes. In the worse case, the logs might be released.
+
+**dl** is developed to resolve their problems.
+
+Moreover, **dl provides utility logging functions which focus on debugging**
+
+## Features
+- **Logging package for debug in Go**
+- **Command for Sweeping all functions of this package**
+- **Command for installing git pre-commit hook**
 
 ## Installation
 ### Go1.18
