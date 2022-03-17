@@ -24,8 +24,8 @@ func newDelog() *sweeper {
 	}
 }
 
-// Clean deletes all methods related to delog
-func (d *sweeper) Clean(ctx context.Context, targetPath string) error {
+// Sweep deletes all methods related to delog
+func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
 	// validation
 	if !strings.HasSuffix(targetPath, ".go") {
 		return fmt.Errorf("targetPath is not .go file: %s", targetPath)

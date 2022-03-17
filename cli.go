@@ -44,7 +44,7 @@ func (c *Delog) Clean(ctx context.Context, baseDir string) error {
 		if strings.HasSuffix(path, ".go") {
 			fmt.Fprintf(os.Stderr, "remove delog from %s\n", path)
 			// might be good running concurrently?
-			return c.sweeper.Clean(ctx, path)
+			return c.sweeper.Sweep(ctx, path)
 		}
 		return nil
 	})

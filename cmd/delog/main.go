@@ -8,8 +8,6 @@ import (
 	"github.com/task4233/delog"
 )
 
-var version string
-
 func main() {
 	cli := delog.New()
 	if err := cli.Run(context.Background(), os.Args[1:]); err != nil {
