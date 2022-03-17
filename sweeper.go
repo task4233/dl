@@ -1,4 +1,4 @@
-package delog
+package dl
 
 import (
 	"bufio"
@@ -12,19 +12,19 @@ import (
 	"strings"
 )
 
-const delogPath = "\"github.com/task4233/delog\""
+const dlPath = "\"github.com/task4233/dl\""
 
 type sweeper struct {
-	delogPkgName string
+	dlPkgName string
 }
 
-func newDelog() *sweeper {
+func newdl() *sweeper {
 	return &sweeper{
-		delogPkgName: "delog", // default package name
+		dlPkgName: "dl", // default package name
 	}
 }
 
-// Sweep deletes all methods related to delog
+// Sweep deletes all methods related to dl
 func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
 	// validation
 	if !strings.HasSuffix(targetPath, ".go") {
@@ -46,16 +46,16 @@ func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
 			if w.Tok.String() == "import" {
 				for importSpecIdx, spec := range w.Specs {
 					if importSpec, ok := spec.(*ast.ImportSpec); ok && importSpec != nil {
-						if importSpec.Path != nil && importSpec.Path.Value == delogPath {
+						if importSpec.Path != nil && importSpec.Path.Value == dlPath {
 							removedIdx = importSpecIdx
 							if importSpec.Name != nil {
-								d.delogPkgName = importSpec.Name.Name
+								d.dlPkgName = importSpec.Name.Name
 							}
 						}
 					}
 				}
 
-				// in importing only delog
+				// in importing only dl
 				if removedIdx == 0 {
 					w.Specs = w.Specs[1:]
 				} else {
@@ -64,7 +64,7 @@ func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
 			}
 		case *ast.FuncDecl:
 			// remove all methods
-			err := d.removeDelogStmt(&w.Body.List)
+			err := d.removedlStmt(&w.Body.List)
 			if err != nil {
 				return err
 			}
@@ -102,7 +102,7 @@ func (d *sweeper) Sweep(ctx context.Context, targetPath string) error {
 	return nil
 }
 
-func (d *sweeper) removeDelogStmt(statements *[]ast.Stmt) error {
+func (d *sweeper) removedlStmt(statements *[]ast.Stmt) error {
 	removedIdxs := []int{}
 
 	for idx, stmt := range *statements {
@@ -114,7 +114,7 @@ func (d *sweeper) removeDelogStmt(statements *[]ast.Stmt) error {
 				case *ast.SelectorExpr:
 					switch x2 := fun.X.(type) {
 					case *ast.Ident:
-						if d.delogPkgName == x2.Name {
+						if d.dlPkgName == x2.Name {
 							removedIdxs = append(removedIdxs, idx)
 						}
 					}
@@ -136,7 +136,7 @@ func (d *sweeper) removeDelogStmt(statements *[]ast.Stmt) error {
 // createTmpFile creates a temporary file and return *os.File and a cleanUp function
 func createTmpFile() (f *os.File, fn func(), err error) {
 	// might be change to GOTMPDIR
-	f, err = os.CreateTemp("", "_delog.go")
+	f, err = os.CreateTemp("", "_dl.go")
 	if err == nil {
 		fn = func() {
 			os.Remove(f.Name())

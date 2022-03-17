@@ -1,4 +1,4 @@
-package delog
+package dl
 
 import (
 	"fmt"
