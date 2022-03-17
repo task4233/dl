@@ -4,7 +4,28 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
+	"strings"
 )
+
+func FInfo[T any](w io.Writer, v T) (int, error) {
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		return Fprintf(w, "failed FInfo: %v", v)
+	}
+	file = file[strings.LastIndex(file, "/")+1:]
+
+	if any(v) == nil {
+
+		return Fprintf(w, "[DeLog] info: nil\n%s:%d\n", file, line)
+	}
+	return Fprintf(w, "[DeLog] info: %#v (%T)\n%s:%d\n", v, v, file, line)
+}
+
+func main() {
+	num := 1
+	FInfo(os.Stderr, num)
+}
 
 // Fprintf formats according to a format specifier and writes to w.
 // Arguments are handled in the manner of fmt.FPrintf.
