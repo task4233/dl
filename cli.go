@@ -18,7 +18,7 @@ type DeLog struct {
 // New for running dl package with CLI
 func New() *DeLog {
 	return &DeLog{
-		newdl(),
+		newSweeper(),
 	}
 }
 
