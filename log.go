@@ -6,7 +6,13 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"golang.org/x/tools/go/analysis/singlechecker"
 )
+
+func init() {
+	singlechecker.Main(Analyzer)
+}
 
 // FInfo gives a val, a type, a file name, a line number and writes to w..
 func FInfo[T any](w io.Writer, v T) (int, error) {
