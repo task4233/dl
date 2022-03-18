@@ -39,8 +39,19 @@ func (d *DeLog) Run(ctx context.Context, args []string) error {
 		}
 		return d.Init(ctx, args[1])
 	default:
-		return fmt.Errorf("command %s is not implemented", args[0])
+		return d.usage(args[0])
 	}
+}
+
+func (d *DeLog) usage(invalidCmd string) error {
+	msg := "%s is not implemented.\n"
+	fmt.Fprintf(os.Stderr, msg+
+		`Usage: dl [command]
+Commands:
+init <dir>                  add dl command into pre-commit.
+clean <dir>                 deletes logs used this package.
+`, invalidCmd)
+	return fmt.Errorf(msg, invalidCmd)
 }
 
 // Clean deletes all methods related to dl in ".go" files under the given directory path
