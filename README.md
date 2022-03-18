@@ -15,7 +15,7 @@ However, some developers forget to delete their logs after resolving the problem
 
 **dl** is developed to resolve their problems.
 
-Moreover, **dl provides utility logging functions which focus on debugging**
+Moreover, **dl provides utility logging functions which focus on debugging**.
 
 ## Features
 - **Logging package for debug in Go**
