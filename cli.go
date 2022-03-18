@@ -56,7 +56,7 @@ func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
 }
 
 const precommitScript = `#!/bin/sh
-$(echo $GOBIN)/dl clean .
+dl clean .
 git add .
 `
 
