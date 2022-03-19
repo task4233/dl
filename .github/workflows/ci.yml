@@ -40,3 +40,11 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: cover.out
           yml: .github/codecov.yml
+      - name: Run GoReleaser
+        if: contains(github.ref, 'tags/v')
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

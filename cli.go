@@ -25,9 +25,10 @@ func New() *DeLog {
 }
 
 // Run executes each method for dl package
-func (d *DeLog) Run(ctx context.Context, args []string) error {
+func (d *DeLog) Run(ctx context.Context, version string, args []string) error {
 	if len(args) == 0 {
-		return errors.New("no argument")
+		d.usage(version, "")
+		return errors.New("no command is given.")
 	}
 	if len(args) == 1 {
 		args = append(args, ".")
@@ -41,7 +42,7 @@ func (d *DeLog) Run(ctx context.Context, args []string) error {
 	case "remove":
 		return d.Remove(ctx, args[1])
 	default:
-		return d.usage(args[0])
+		return d.usage(version, args[0])
 	}
 }
 
@@ -170,14 +171,14 @@ func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
 	return nil
 }
 
-func (d *DeLog) usage(invalidCmd string) error {
-	msg := "%s is not implemented.\n"
-	fmt.Fprintf(os.Stderr, msg+
-		`Usage: dl [command]
+const msg = "dl %s: The instant logger package for debug.\n"
+
+func (d *DeLog) usage(version, invalidCmd string) error {
+	fmt.Fprintf(os.Stderr, msg+`Usage: dl [command]
 Commands:
 init <dir>                  add dl command into pre-commit script.
 clean <dir>                 deletes logs used this package.
-remove <dir>				remove dl command from pre-commit script.
-`, invalidCmd)
-	return fmt.Errorf(msg, invalidCmd)
+remove <dir>                remove dl command from pre-commit script.
+`, version)
+	return fmt.Errorf("%s is not implemented.", invalidCmd)
 }

@@ -53,7 +53,7 @@ func TestRun(t *testing.T) {
 
 			cli := New()
 
-			err := cli.Run(context.Background(), tt.args)
+			err := cli.Run(context.Background(), "v0.0.0", tt.args)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("unexpected error, wantError=%v, got=%v", tt.wantErr, err)
 			}

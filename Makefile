@@ -1,6 +1,9 @@
+GIT_REF := $(shell git describe --always --tag)
+VERSION ?= $(GIT_REF)
+
 .PHONY: clean
 build:
-	go build -o ./bin/dl -trimpath -mod=readonly ./cmd/dl
+	go build -o ./bin/dl -trimpath -ldflags "-w -s -X main.version=$(VERSION)" -mod=readonly ./cmd/dl
 
 test:
 	go test -v -race -shuffle=on ./...
