@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -44,17 +45,6 @@ func (d *DeLog) Run(ctx context.Context, args []string) error {
 	}
 }
 
-func (d *DeLog) usage(invalidCmd string) error {
-	msg := "%s is not implemented.\n"
-	fmt.Fprintf(os.Stderr, msg+
-		`Usage: dl [command]
-Commands:
-init <dir>                  add dl command into pre-commit.
-clean <dir>                 deletes logs used this package.
-`, invalidCmd)
-	return fmt.Errorf(msg, invalidCmd)
-}
-
 // Clean deletes all methods related to dl in ".go" files under the given directory path
 func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
 	return filepath.Walk(baseDir, func(path string, info fs.FileInfo, err error) error {
@@ -65,40 +55,6 @@ func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
 		}
 		return nil
 	})
-}
-
-// Remove deletes `$ dl clean` command from pre-commit script
-func (d *DeLog) Remove(ctx context.Context, baseDir string) error {
-	path := filepath.Join(baseDir, ".git", "hooks", "pre-commit")
-	FInfo(os.Stderr, path)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return err
-	}
-
-	f, err := os.OpenFile(path, os.O_RDWR, 0600)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	buf := []byte{}
-	if _, err := f.Read(buf); err != nil {
-		return err
-	}
-
-	idx := bytes.Index(buf, []byte(precommitScript))
-	if idx < 0 {
-		return nil
-	}
-	if len(buf) == len(precommitScript) {
-		return os.Remove(path)
-	}
-
-	if _, err := f.Write(append(buf[:idx], buf[idx+len(precommitScript)+1:]...)); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Although these values will be casted to []byte, they are declared as constants
@@ -150,4 +106,75 @@ func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
 	}
 
 	return os.Chmod(path, 0755)
+}
+
+// Remove deletes `$ dl clean` command from pre-commit script
+func (d *DeLog) Remove(ctx context.Context, baseDir string) error {
+	path := filepath.Join(baseDir, ".git", "hooks", "pre-commit")
+	buf, err := readFile(ctx, path)
+	if err != nil {
+		return err
+	}
+	if buf == nil {
+		return nil
+	}
+
+	return removePrecommitScript(ctx, path, buf)
+}
+
+// readFile is created for calling f.Close() surely
+func readFile(ctx context.Context, path string) ([]byte, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// if a pre-commit file does not exist, this method has no effect.
+		return nil, nil
+	}
+
+	f, err := os.OpenFile(path, os.O_RDONLY, 0600)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	return io.ReadAll(f)
+}
+
+func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
+	idx := bytes.Index(buf, []byte(precommitScript))
+	if idx < 0 {
+		return nil
+	}
+	if len(buf) == len(precommitScript) {
+		return os.Remove(path)
+	}
+
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// 0 <= idx && idx < len(buf)-1	=> append(buf[:idx], buf[idx+len(precommitScript):]
+	// idx == len(buf)-1			=> buf[:idx]
+	if idx == len(buf)-1 {
+		if _, err := f.Write(buf[:idx]); err != nil {
+			return err
+		}
+	} else {
+		if _, err := f.Write(append(buf[:idx], buf[idx+len(precommitScript):]...)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d *DeLog) usage(invalidCmd string) error {
+	msg := "%s is not implemented.\n"
+	fmt.Fprintf(os.Stderr, msg+
+		`Usage: dl [command]
+Commands:
+init <dir>                  add dl command into pre-commit.
+clean <dir>                 deletes logs used this package.
+`, invalidCmd)
+	return fmt.Errorf(msg, invalidCmd)
 }
