@@ -15,8 +15,6 @@ However, some developers forget to delete their logs after resolving the problem
 
 **dl** is developed to resolve their problems.
 
-Moreover, **dl provides utility logging functions which focus on debugging**.
-
 ## Features
 - **Logging package for debug in Go**
 - **Command for Sweeping all functions of this package**
@@ -32,7 +30,7 @@ $ go install github.com/task4233/dl/cmd/dl@latest
 ## Use Case
 ### Debug
 
-[Playground](https://go.dev/play/p/sMhyVMuPYMc)
+[Playground](https://go.dev/play/p/GRucgd6JhPk)
 ```go
 package main
 
@@ -42,34 +40,35 @@ import (
 	"github.com/task4233/dl"
 )
 
-type T[T1 any] []T1
+type U[T any] []T
 
-func (t T[T1]) append(v T1) {
+func (t U[T]) append(v T) {
 	t = append(t, v)
 	dl.Info(t)
 }
 
-func (t T[T1]) change(v T1) {
+func (t U[T]) change(v T) {
 	t[0] = v
 	dl.FInfo(os.Stdout, t)
 }
 
 func main() {
-	t := T[int]([]int{1, 3})
+	t := U[int]([]int{1, 3})
 	t.append(5)
 	t.change(5)
 }
 
+
 // Output:
-// [DeLog] info: main.T[int]{1, 3, 5} (main.T[int]) prog.go:13
-// [DeLog] info: main.T[int]{5, 3} (main.T[int]) prog.go:18
+// [DeLog] info: main.U[int]{1, 3, 5} (main.U[int]) prog.go:13
+// [DeLog] info: main.U[int]{5, 3} (main.U[int]) prog.go:18
 ```
 
 ### Adds dl into pre-commit of Git
 1. Please run commands below to install dl in your Git repository.
 
 ```bash
-dl init .
+$ dl init .
 ```
 
 2. Just commit
@@ -134,7 +133,7 @@ index 90a78bd..0e28e8a 100644
 ### Remove dl from pre-commit of Git
 
 ```bash
-dl remove .
+$ dl remove .
 ```
 
 ## Contribution
