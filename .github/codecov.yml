@@ -9,3 +9,9 @@ coverage:
 
 comment:
   require_changes: true
+
+ignore:
+- ".gitignore"
+- "**/*.yml"
+- "cover*"
+- "testdata*"
