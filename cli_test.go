@@ -139,18 +139,23 @@ func TestRemove(t *testing.T) {
 			baseDir: "testdata/removed",
 			wantErr: false,
 		},
-		"success with pre-script added other commands before": {
+		"success with pre-commit-script added other commands before": {
 			baseDir: "testdata/remove-before",
 			wantErr: false,
 		},
-		"success with pre-script added other commands after": {
+		"success with pre-commit-script added other commands after": {
 			baseDir: "testdata/remove-after",
 			wantErr: false,
 		},
-		"success with pre-script added other commands both before and after": {
+		"success with pre-commit-script added other commands both before and after": {
 			baseDir: "testdata/remove-both",
 			wantErr: false,
 		},
+		"success with pre-commit-script unrelated to dl": {
+			baseDir: "testdata/remove-from-unrelated",
+			wantErr: false,
+		},
+
 		"failed because .git directory does not exists": {
 			baseDir: "testdata/clean", // there is not a .git in ./testdata/clean directory
 			wantErr: true,
