@@ -37,35 +37,18 @@ func (d *Sweeper) Sweep(ctx context.Context, targetPath string) error {
 		return err
 	}
 
-	var removedIdx int = -1
-
 	for _, decl := range fileAst.Decls {
 		switch w := decl.(type) {
 		case *ast.GenDecl:
 			// check import alias
 			if w.Tok.String() == "import" {
-				for importSpecIdx, spec := range w.Specs {
-					if importSpec, ok := spec.(*ast.ImportSpec); ok && importSpec != nil {
-						if importSpec.Path != nil && importSpec.Path.Value == dlPath {
-							removedIdx = importSpecIdx
-							if importSpec.Name != nil {
-								d.dlPkgName = importSpec.Name.Name
-							}
-						}
-					}
-				}
-
-				// in importing only dl
-				if removedIdx == 0 {
-					w.Specs = w.Specs[1:]
-				} else if removedIdx > 0 {
-					w.Specs = append(w.Specs[:removedIdx], w.Specs[removedIdx+1:]...)
+				if err := d.removeImportSpec(&w.Specs); err != nil {
+					return err
 				}
 			}
 		case *ast.FuncDecl:
 			// remove all methods
-			err := d.removedlStmt(&w.Body.List)
-			if err != nil {
+			if err := d.removedlStmt(&w.Body.List); err != nil {
 				return err
 			}
 		}
@@ -99,6 +82,30 @@ func (d *Sweeper) Sweep(ctx context.Context, targetPath string) error {
 		return err
 	}
 
+	return nil
+}
+
+func (d *Sweeper) removeImportSpec(specs *[]ast.Spec) error {
+	var removedIdx int = -1
+
+	for importSpecIdx, spec := range *specs {
+		switch importSpec := spec.(type) {
+		case *ast.ImportSpec:
+			if importSpec.Path != nil && importSpec.Path.Value == dlPath {
+				removedIdx = importSpecIdx
+				if importSpec.Name != nil {
+					d.dlPkgName = importSpec.Name.Name
+				}
+			}
+		default:
+			Printf("not implemented: %#v\nplease report this bug to https://github.com/task4233/dl/issues/new/choose 🙏", importSpec)
+		}
+	}
+
+	if removedIdx < 0 {
+		return nil
+	}
+	*specs = append((*specs)[:removedIdx], (*specs)[removedIdx+1:]...)
 	return nil
 }
 
