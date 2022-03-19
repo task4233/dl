@@ -131,6 +131,12 @@ index 90a78bd..0e28e8a 100644
  }
 ```
 
+### Remove dl from pre-commit of Git
+
+```bash
+dl remove .
+```
+
 ## Contribution
 Please feel free to make [issues](https://github.com/task4233/dl/issues/new/choose) and pull requests.
 

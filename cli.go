@@ -175,8 +175,9 @@ func (d *DeLog) usage(invalidCmd string) error {
 	fmt.Fprintf(os.Stderr, msg+
 		`Usage: dl [command]
 Commands:
-init <dir>                  add dl command into pre-commit.
+init <dir>                  add dl command into pre-commit script.
 clean <dir>                 deletes logs used this package.
+remove <dir>				remove dl command from pre-commit script.
 `, invalidCmd)
 	return fmt.Errorf(msg, invalidCmd)
 }
