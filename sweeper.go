@@ -122,7 +122,8 @@ func (d *Sweeper) removedlStmt(statements *[]ast.Stmt) error {
 				// TODO: add other cases
 			}
 		default:
-			fmt.Printf("other type: %#v\n", exp)
+			Printf("not implemented: %#v\n", exp)
+			Println("please report this bug to https://github.com/task4233/dl/issues/new/choose 🙏")
 		}
 	}
 

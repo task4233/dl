@@ -28,6 +28,10 @@ func TestRun(t *testing.T) {
 			args:    []string{"init", "testdata/run"},
 			wantErr: false,
 		},
+		"success with remove": {
+			args:    []string{"remove", "testdata/run/remove"},
+			wantErr: false,
+		},
 		"no effect with invalid file extension": {
 			args:    []string{"clean", "testdata/a.txt"},
 			wantErr: false,

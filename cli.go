@@ -84,7 +84,6 @@ func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
 	}
 
 	path = filepath.Join(path, "pre-commit")
-
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
 	if err != nil {
 		return err
@@ -93,8 +92,8 @@ func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
 
 	// It checks if `$ dl clean` has been installed or not.
 	// If so, not inserting codes.
-	buf := []byte{}
-	if _, err := f.Read(buf); err != nil {
+	buf, err := io.ReadAll(f)
+	if err != nil {
 		return err
 	}
 	if bytes.Contains(buf, []byte(cleanCmd)) {
@@ -144,7 +143,10 @@ func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
 		return nil
 	}
 	if len(buf) == len(precommitScript) {
-		return os.Remove(path)
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	f, err := os.Create(path)
@@ -154,8 +156,8 @@ func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
 	defer f.Close()
 
 	// 0 <= idx && idx < len(buf)-1	=> append(buf[:idx], buf[idx+len(precommitScript):]
-	// idx == len(buf)-1			=> buf[:idx]
-	if idx == len(buf)-1 {
+	// idx == len(buf)-len(preCommitScript)	=> buf[:idx]
+	if idx == len(buf)-len(precommitScript) {
 		if _, err := f.Write(buf[:idx]); err != nil {
 			return err
 		}
