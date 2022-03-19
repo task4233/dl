@@ -171,12 +171,11 @@ func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
 }
 
 func (d *DeLog) usage(invalidCmd string) error {
-	msg := "%s is not implemented.\n"
-	fmt.Fprintf(os.Stderr, msg+
-		`Usage: dl [command]
+	fmt.Fprint(os.Stderr, `Usage: dl [command]
 Commands:
-init <dir>                  add dl command into pre-commit.
+init <dir>                  add dl command into pre-commit script.
 clean <dir>                 deletes logs used this package.
-`, invalidCmd)
-	return fmt.Errorf(msg, invalidCmd)
+remove <dir>                remove dl command from pre-commit script.
+`)
+	return fmt.Errorf("%s is not implemented.", invalidCmd)
 }
