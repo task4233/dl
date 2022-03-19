@@ -5,7 +5,13 @@ coverage:
         threshold: 1%
     patch:
       default:
-        threshold: 1%
+        threshold: 5%
 
 comment:
   require_changes: true
+
+ignore:
+- ".gitignore"
+- "**/*.yml"
+- "cover*"
+- "testdata*"

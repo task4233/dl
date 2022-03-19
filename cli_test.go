@@ -28,6 +28,10 @@ func TestRun(t *testing.T) {
 			args:    []string{"init", "testdata/run"},
 			wantErr: false,
 		},
+		"success with remove": {
+			args:    []string{"remove", "testdata/run/remove"},
+			wantErr: false,
+		},
 		"no effect with invalid file extension": {
 			args:    []string{"clean", "testdata/a.txt"},
 			wantErr: false,
@@ -74,8 +78,12 @@ func TestInit(t *testing.T) {
 		baseDir string
 		wantErr bool
 	}{
-		"success with": {
+		"success": {
 			baseDir: "testdata/init",
+			wantErr: false,
+		},
+		"success in inited directory": {
+			baseDir: "testdata/inited",
 			wantErr: false,
 		},
 		"failed because .git directory does not exists": {
@@ -110,6 +118,75 @@ func TestInit(t *testing.T) {
 
 			if !bytes.Contains(data, []byte("dl clean")) {
 				t.Fatalf("pre-commit script is not installed")
+			}
+
+		})
+	}
+}
+
+func TestRemove(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		baseDir string
+		wantErr bool
+	}{
+		"success with inited directory": {
+			baseDir: "testdata/remove",
+			wantErr: false,
+		},
+		"success with removed directory": {
+			baseDir: "testdata/removed",
+			wantErr: false,
+		},
+		"success with pre-commit-script added other commands before": {
+			baseDir: "testdata/remove-before",
+			wantErr: false,
+		},
+		"success with pre-commit-script added other commands after": {
+			baseDir: "testdata/remove-after",
+			wantErr: false,
+		},
+		"success with pre-commit-script added other commands both before and after": {
+			baseDir: "testdata/remove-both",
+			wantErr: false,
+		},
+		"success with pre-commit-script unrelated to dl": {
+			baseDir: "testdata/remove-from-unrelated",
+			wantErr: false,
+		},
+
+		"failed because .git directory does not exists": {
+			baseDir: "testdata/clean", // there is not a .git in ./testdata/clean directory
+			wantErr: true,
+		},
+	}
+
+	for name, tt := range tests {
+		tt := tt
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if err := New().Remove(context.Background(), tt.baseDir); err != nil {
+				if (err != nil) != tt.wantErr {
+					t.Fatalf("failed Init: err=%v", err)
+				}
+				return
+			}
+
+			precommitFilePath := filepath.Join(tt.baseDir, ".git", "hooks", "pre-commit")
+			if _, err := os.Stat(precommitFilePath); os.IsNotExist(err) {
+				return
+			}
+
+			data, err := os.ReadFile(precommitFilePath)
+			if err != nil {
+				t.Fatalf("failed to read file: %v", err)
+			}
+
+			if bytes.Contains(data, []byte("dl clean")) {
+				t.Fatalf("failed to remove pre-commit script:\n%s", string(data))
 			}
 
 		})
