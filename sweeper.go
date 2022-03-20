@@ -191,3 +191,25 @@ func (d *Sweeper) Evacuate(ctx context.Context, baseDirPath string, srcFilePath 
 
 	return nil
 }
+
+// Restore copies ".go" files to raw places.
+// This method requires ".dl" directory to exist.
+func (s *Sweeper) Restore(ctx context.Context, srcFilePath string, dstFilePath string) error {
+	srcFile, err := os.Open(srcFilePath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	dstFile, err := os.Create(dstFilePath)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	if _, err := io.Copy(dstFile, srcFile); err != nil {
+		return err
+	}
+
+	return nil
+}

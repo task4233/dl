@@ -41,6 +41,8 @@ func (d *DeLog) Run(ctx context.Context, version string, args []string) error {
 		return d.Init(ctx, args[1])
 	case "remove":
 		return d.Remove(ctx, args[1])
+	case "restore":
+		return d.Restore(ctx, args[1])
 	default:
 		return d.usage(version, args[0])
 	}
@@ -52,8 +54,9 @@ var (
 
 // Clean deletes all methods related to dl in ".go" files under the given directory path
 func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
-	if _, err := os.Stat(filepath.Join(baseDir, ".dl")); os.IsNotExist(err) {
-		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", filepath.Join(baseDir, ".dl"))
+	dlDirPath := filepath.Join(baseDir, ".dl")
+	if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
+		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", dlDirPath)
 	}
 
 	return filepath.WalkDir(baseDir, func(path string, info fs.DirEntry, err error) error {
@@ -99,6 +102,7 @@ func (d *DeLog) Init(ctx context.Context, baseDir string) error {
 
 	return nil
 }
+
 func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
 	path := filepath.Join(baseDir, ".git", "hooks")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -201,14 +205,36 @@ func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
 	return nil
 }
 
+// Restore restores raw files from .dl directory
+func (d *DeLog) Restore(ctx context.Context, baseDir string) error {
+	dlDirPath := filepath.Join(baseDir, ".dl")
+	if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
+		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", dlDirPath)
+	}
+
+	return filepath.WalkDir(baseDir, func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to walkDir: %w", err)
+		}
+		if !strings.HasSuffix(path, ".go") {
+			return nil
+		}
+
+		// might be good running concurrently? TODO(#7)
+		idx := strings.Index(path, ".dl")
+		return d.Sweeper.Restore(ctx, path, path[:idx]+path[idx+len(".dl"):])
+	})
+}
+
 const msg = "dl %s: The instant logger package for debug.\n"
 
 func (d *DeLog) usage(version, invalidCmd string) error {
 	fmt.Fprintf(os.Stderr, msg+`Usage: dl [command]
 Commands:
-init <dir>                  add dl command into pre-commit script.
 clean <dir>                 deletes logs used this package.
+init <dir>                  add dl command into pre-commit script.
 remove <dir>                remove dl command from pre-commit script.
+restore <dir>               restore removed logs.
 `, version)
 	return fmt.Errorf("%s is not implemented.", invalidCmd)
 }

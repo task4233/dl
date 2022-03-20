@@ -30,6 +30,14 @@ func TestRun(t *testing.T) {
 			args:    []string{"remove", "testdata/run/remove"},
 			wantErr: false,
 		},
+		"success restore": {
+			args:    []string{"restore", "testdata/run/restore"},
+			wantErr: false,
+		},
+		"failed restore with uninited directory": {
+			args:    []string{"restore", "testdata/run/clean-with-uninited"},
+			wantErr: true,
+		},
 		"failed clean with uninited directory": {
 			args:    []string{"clean", "testdata/run/clean-with-uninited"},
 			wantErr: true,
