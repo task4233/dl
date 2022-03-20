@@ -183,7 +183,20 @@ func (d *DeLog) createDlDirIfNotExist(ctx context.Context, baseDir string) error
 
 // Remove deletes `$ dl clean` command from pre-commit script
 func (d *DeLog) Remove(ctx context.Context, baseDir string) error {
-	path := filepath.Join(baseDir, ".git", "hooks", "pre-commit")
+	path := filepath.Join(baseDir, ".git", "hooks")
+
+	if err := removeScript(ctx, filepath.Join(path, "pre-commit"), preCommitScript); err != nil {
+		return err
+	}
+
+	if err := removeScript(ctx, filepath.Join(path, "post-commit"), postCommitScript); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func removeScript(ctx context.Context, path string, script string) error {
 	buf, err := readFile(ctx, path)
 	if err != nil {
 		return err
@@ -191,7 +204,36 @@ func (d *DeLog) Remove(ctx context.Context, baseDir string) error {
 	if buf == nil {
 		return nil
 	}
-	return removePrecommitScript(ctx, path, buf)
+
+	idx := bytes.Index(buf, []byte(script))
+	if idx < 0 {
+		return nil
+	}
+	if len(buf) == len(script) {
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+		return nil
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// 0 <= idx && idx < len(buf)-1	=> append(buf[:idx], buf[idx+len(script):]
+	// idx == len(buf)-len(script)	=> buf[:idx]
+	if idx == len(buf)-len(script) {
+		if _, err := f.Write(buf[:idx]); err != nil {
+			return err
+		}
+	} else {
+		if _, err := f.Write(append(buf[:idx], buf[idx+len(script):]...)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // readFile is created for calling f.Close() surely
@@ -208,38 +250,6 @@ func readFile(ctx context.Context, path string) ([]byte, error) {
 	defer f.Close()
 
 	return io.ReadAll(f)
-}
-
-func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
-	idx := bytes.Index(buf, []byte(preCommitScript))
-	if idx < 0 {
-		return nil
-	}
-	if len(buf) == len(preCommitScript) {
-		if err := os.Remove(path); err != nil {
-			return err
-		}
-		return nil
-	}
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	// 0 <= idx && idx < len(buf)-1	=> append(buf[:idx], buf[idx+len(precommitScript):]
-	// idx == len(buf)-len(preCommitScript)	=> buf[:idx]
-	if idx == len(buf)-len(preCommitScript) {
-		if _, err := f.Write(buf[:idx]); err != nil {
-			return err
-		}
-	} else {
-		if _, err := f.Write(append(buf[:idx], buf[idx+len(preCommitScript):]...)); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // Restore restores raw files from .dl directory
