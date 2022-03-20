@@ -49,12 +49,12 @@ func (d *DeLog) Run(ctx context.Context, version string, args []string) error {
 }
 
 var (
-	excludedFiles = []string{".dl", ".git"}
+	excludedFiles = []string{dlDirPath, ".git"}
 )
 
 // Clean deletes all methods related to dl in ".go" files under the given directory path
 func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
-	dlDirPath := filepath.Join(baseDir, ".dl")
+	dlDirPath := filepath.Join(baseDir, dlDirPath)
 	if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
 		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", dlDirPath)
 	}
@@ -93,6 +93,7 @@ dl restore .
 `
 	cleanCmd   = "dl clean"
 	restoreCmd = "dl restore"
+	dlDirPath  = ".dl"
 )
 
 // Init inserts dl command into git pre-commit hook
@@ -106,6 +107,9 @@ func (d *DeLog) Init(ctx context.Context, baseDir string) error {
 	if err := d.createDlDirIfNotExist(ctx, baseDir); err != nil {
 		return err
 	}
+	if err := d.addDlIntoGitIgnore(ctx, baseDir); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -116,7 +120,7 @@ func (d *DeLog) addGitPreHookScript(ctx context.Context, baseDir string) error {
 		return err
 	}
 	preCommitPath := filepath.Join(path, "pre-commit")
-	f, err := os.OpenFile(preCommitPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
+	f, err := os.OpenFile(preCommitPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0755)
 	if err != nil {
 		return err
 	}
@@ -136,7 +140,7 @@ func (d *DeLog) addGitPreHookScript(ctx context.Context, baseDir string) error {
 		return err
 	}
 
-	return os.Chmod(preCommitPath, 0700)
+	return os.Chmod(preCommitPath, 0755)
 }
 
 func (d *DeLog) addGitPostHookScript(ctx context.Context, baseDir string) error {
@@ -146,7 +150,7 @@ func (d *DeLog) addGitPostHookScript(ctx context.Context, baseDir string) error 
 	}
 
 	postCommitPath := filepath.Join(path, "post-commit")
-	f, err := os.OpenFile(postCommitPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
+	f, err := os.OpenFile(postCommitPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0755)
 	if err != nil {
 		return err
 	}
@@ -166,11 +170,34 @@ func (d *DeLog) addGitPostHookScript(ctx context.Context, baseDir string) error 
 		return err
 	}
 
-	return os.Chmod(postCommitPath, 0700)
+	return os.Chmod(postCommitPath, 0755)
+}
+
+func (d *DeLog) addDlIntoGitIgnore(ctx context.Context, baseDir string) error {
+	path := filepath.Join(baseDir, ".gitignore")
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0755)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	buf, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	if bytes.Contains(buf, []byte(dlDirPath)) {
+		return nil
+	}
+
+	if _, err := fmt.Fprintf(f, "\n%s\n", dlDirPath); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *DeLog) createDlDirIfNotExist(ctx context.Context, baseDir string) error {
-	path := filepath.Join(baseDir, ".dl")
+	path := filepath.Join(baseDir, dlDirPath)
 	if stat, err := os.Stat(path); err == nil {
 		if stat.IsDir() {
 			return nil
@@ -178,7 +205,7 @@ func (d *DeLog) createDlDirIfNotExist(ctx context.Context, baseDir string) error
 		return fmt.Errorf("%s has been already existed as file. Please rename or delete it.", path)
 	}
 
-	return os.Mkdir(path, 0700)
+	return os.Mkdir(path, 0755)
 }
 
 // Remove deletes `$ dl clean` command from pre-commit script
@@ -243,7 +270,7 @@ func readFile(ctx context.Context, path string) ([]byte, error) {
 		return nil, nil
 	}
 
-	f, err := os.OpenFile(path, os.O_RDONLY, 0600)
+	f, err := os.OpenFile(path, os.O_RDONLY, 0755)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +281,7 @@ func readFile(ctx context.Context, path string) ([]byte, error) {
 
 // Restore restores raw files from .dl directory
 func (d *DeLog) Restore(ctx context.Context, baseDir string) error {
-	dlDirPath := filepath.Join(baseDir, ".dl")
+	dlDirPath := filepath.Join(baseDir, dlDirPath)
 	if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
 		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", dlDirPath)
 	}
@@ -268,8 +295,11 @@ func (d *DeLog) Restore(ctx context.Context, baseDir string) error {
 		}
 
 		// might be good running concurrently? TODO(#7)
-		idx := strings.Index(path, ".dl")
-		return d.Sweeper.Restore(ctx, path, path[:idx]+path[idx+len(".dl"):])
+		idx := strings.Index(path, dlDirPath)
+		if idx < 0 {
+			return nil
+		}
+		return d.Sweeper.Restore(ctx, path, path[:idx]+path[idx+len(dlDirPath)+1:])
 	})
 }
 

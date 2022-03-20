@@ -129,17 +129,22 @@ func TestInit(t *testing.T) {
 			}
 
 			postCommitFilePath := filepath.Join(tt.baseDir, ".git", "hooks", "post-commit")
-			if _, err := os.Stat(postCommitFilePath); os.IsNotExist(err) {
-				t.Fatalf("failed to create post-commit script: %v", err)
-			}
 			data, err = os.ReadFile(postCommitFilePath)
 			if err != nil {
 				t.Fatalf("failed to read file: %v", err)
 			}
 			if !bytes.Contains(data, []byte("dl restore")) {
-				t.Fatalf("pre-commit script is not installed")
+				t.Fatalf("post-commit script is not installed")
 			}
 
+			gitignoreFilePath := filepath.Join(tt.baseDir, ".gitignore")
+			data, err = os.ReadFile(gitignoreFilePath)
+			if err != nil {
+				t.Fatalf("failed to read file: %v", err)
+			}
+			if !bytes.Contains(data, []byte(".dl")) {
+				t.Fatalf("gitignore is not configured")
+			}
 		})
 	}
 }

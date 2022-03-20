@@ -130,7 +130,7 @@ func (d *Sweeper) removedlStmt(statements *[]ast.Stmt) error {
 				// TODO: add other cases
 			}
 		default:
-			Printf("not implemented: %#v\nplease report this bug to https://github.com/task4233/dl/issues/new/choose 🙏", exp)
+			Printf("not implemented: %#v\nplease report this bug to https://github.com/task4233/dl/issues/new/choose 🙏\n", exp)
 		}
 	}
 
@@ -173,7 +173,7 @@ func (d *Sweeper) Evacuate(ctx context.Context, baseDirPath string, srcFilePath 
 
 	parentDir := filepath.Join(targetPath, "..")
 	if _, err := os.Stat(parentDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(parentDir, 0700); err != nil {
+		if err := os.MkdirAll(parentDir, 0755); err != nil {
 			return err
 		}
 	}
