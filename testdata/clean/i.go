@@ -12,3 +12,13 @@ func RangeStmt() {
 		_ = elem
 	}
 }
+
+func SwitchStmt() {
+	var v int = 4
+	switch v {
+	case 1:
+		dl.Info(typ)
+	default:
+		dl.Info(typ)
+	}
+}
