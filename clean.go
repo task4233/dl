@@ -19,12 +19,14 @@ const dlPath = "\"github.com/task4233/dl\""
 var _ Cmd = (*Clean)(nil)
 
 type Clean struct {
-	dlPkgName string
+	dlPkgName   string
+	removedIdxs *IntHeap
 }
 
 func NewClean() *Clean {
 	return &Clean{
-		dlPkgName: "dl", // default package name
+		dlPkgName:   "dl", // default package name
+		removedIdxs: &IntHeap{},
 	}
 }
 
@@ -64,23 +66,23 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 	}
 
 	fset := token.NewFileSet()
-	fileAst, err := parser.ParseFile(fset, targetFilePath, nil, 0)
+	fileAst, err := parser.ParseFile(fset, targetFilePath, nil, parser.ParseComments)
 	if err != nil {
 		return err
 	}
+
+	ast.Print(fset, fileAst)
 
 	for _, decl := range fileAst.Decls {
 		switch w := decl.(type) {
 		case *ast.GenDecl:
 			// check import alias
-			if w.Tok.String() == "import" {
-				if err := c.removeImportSpec(&w.Specs); err != nil {
-					return err
-				}
+			if err := c.removeImportSpec(ctx, &w.Specs); err != nil {
+				return err
 			}
 		case *ast.FuncDecl:
 			// remove all methods
-			if err := c.removedlStmt(&w.Body.List); err != nil {
+			if err := c.removeDlStmt(ctx, &w.Body.List); err != nil {
 				return err
 			}
 		}
@@ -118,16 +120,16 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 	return nil
 }
 
-func (c *Clean) removeImportSpec(specs *[]ast.Spec) error {
+func (c *Clean) removeImportSpec(ctx context.Context, specs *[]ast.Spec) error {
 	var removedIdx int = -1
 
 	for importSpecIdx, spec := range *specs {
-		switch importSpec := spec.(type) {
+		switch exp := spec.(type) {
 		case *ast.ImportSpec:
-			if importSpec.Path != nil && importSpec.Path.Value == dlPath {
+			if exp.Path != nil && exp.Path.Value == dlPath {
 				removedIdx = importSpecIdx
-				if importSpec.Name != nil {
-					c.dlPkgName = importSpec.Name.Name
+				if exp.Name != nil {
+					c.dlPkgName = exp.Name.Name
 				}
 			}
 		}
@@ -140,35 +142,77 @@ func (c *Clean) removeImportSpec(specs *[]ast.Spec) error {
 	return nil
 }
 
-func (c *Clean) removedlStmt(statements *[]ast.Stmt) error {
-	removedIdxs := []int{}
-
+func (c *Clean) removeDlStmt(ctx context.Context, statements *[]ast.Stmt) error {
 	for idx, stmt := range *statements {
 		switch exp := stmt.(type) {
 		case *ast.ExprStmt:
-			switch x := exp.X.(type) {
-			case *ast.CallExpr:
-				switch fun := x.Fun.(type) {
-				case *ast.SelectorExpr:
-					switch x2 := fun.X.(type) {
-					case *ast.Ident:
-						if c.dlPkgName == x2.Name {
-							removedIdxs = append(removedIdxs, idx)
-						}
-					}
-				}
-				// TODO: add other cases
+			c.scanDlIdentInExpr(ctx, &exp.X, idx)
+		case *ast.AssignStmt:
+			for _, expr := range exp.Lhs {
+				c.scanDlIdentInExpr(ctx, &expr, idx)
+			}
+			for _, expr := range exp.Rhs {
+				c.scanDlIdentInExpr(ctx, &expr, idx)
+			}
+		case *ast.BlockStmt:
+			if err := c.removeDlStmt(ctx, &exp.List); err != nil {
+				return err
+			}
+		case *ast.ForStmt:
+			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
+				return err
+			}
+		case *ast.IfStmt:
+			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
+				return err
+			}
+		case *ast.SelectStmt:
+			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
+				return err
+			}
+		case *ast.SwitchStmt:
+			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
+				return err
+			}
+		case *ast.TypeSwitchStmt:
+			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
+				return err
+			}
+		case *ast.RangeStmt:
+			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
+				return err
+			}
+		case *ast.ReturnStmt:
+			for _, expr := range exp.Results {
+				c.scanDlIdentInExpr(ctx, &expr, idx)
 			}
 		default:
 			Printf("not implemented: %#v\nplease report this bug to https://github.com/task4233/dl/issues/new/choose 🙏\n", exp)
 		}
 	}
 
-	for idx := len(removedIdxs) - 1; idx >= 0; idx-- {
-		*statements = append((*statements)[:removedIdxs[idx]], (*statements)[removedIdxs[idx]+1:]...)
+	for c.removedIdxs.Len() > 0 {
+		idx := c.removedIdxs.Pop()
+		*statements = append((*statements)[:idx], (*statements)[idx+1:]...)
 	}
 
 	return nil
+}
+
+func (c *Clean) scanDlIdentInExpr(ctx context.Context, expr *ast.Expr, idx int) {
+	switch x := (*expr).(type) {
+	case *ast.CallExpr:
+		switch fun := x.Fun.(type) {
+		case *ast.SelectorExpr:
+			switch x2 := fun.X.(type) {
+			case *ast.Ident:
+				if c.dlPkgName == x2.Name {
+					c.removedIdxs.Push(idx)
+				}
+			}
+		}
+	}
+
 }
 
 // Evacuate copies ".go" files to under ".dl" directory.
