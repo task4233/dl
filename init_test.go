@@ -3,6 +3,8 @@ package dl_test
 import (
 	"bytes"
 	"context"
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -49,11 +51,11 @@ func TestInit(t *testing.T) {
 				return
 			}
 			preCommitFilePath := filepath.Join(tt.baseDir, ".git", "hooks", "pre-commit")
-			if _, err := os.Stat(preCommitFilePath); os.IsNotExist(err) {
-				t.Fatalf("failed to create pre-commit script: %v", err)
-			}
 			data, err := os.ReadFile(preCommitFilePath)
 			if err != nil {
+				if errors.Is(err, fs.ErrNotExist) {
+					t.Fatalf("failed to create pre-commit script: %v", err)
+				}
 				t.Fatalf("failed to read file: %v", err)
 			}
 			if !bytes.Contains(data, []byte("dl clean")) {

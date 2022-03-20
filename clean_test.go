@@ -119,10 +119,6 @@ func TestEvacuate(t *testing.T) {
 				return
 			}
 
-			// check if existed
-			if _, err := os.Stat(tt.dlFilePath); os.IsNotExist(err) {
-				t.Fatalf("%s is not created", tt.dlFilePath)
-			}
 			// check if same file
 			raw, err := os.ReadFile(tt.targetFilePath)
 			if err != nil {

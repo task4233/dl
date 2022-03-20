@@ -3,7 +3,8 @@ package dl
 import (
 	"bytes"
 	"context"
-	"io"
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -29,12 +30,12 @@ func (r *Remove) Run(ctx context.Context, baseDir string) error {
 }
 
 func (r *Remove) removeScript(ctx context.Context, path string, script string) error {
-	buf, err := r.readFile(ctx, path)
+	buf, err := os.ReadFile(path)
 	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
 		return err
-	}
-	if buf == nil {
-		return nil
 	}
 
 	idx := bytes.Index(buf, []byte(script))
@@ -66,20 +67,4 @@ func (r *Remove) removeScript(ctx context.Context, path string, script string) e
 	}
 
 	return nil
-}
-
-// readFile is created for calling f.Close() surely
-func (*Remove) readFile(ctx context.Context, path string) ([]byte, error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		// if a pre-commit file does not exist, this method has no effect.
-		return nil, nil
-	}
-
-	f, err := os.OpenFile(path, os.O_RDONLY, 0755)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	return io.ReadAll(f)
 }
