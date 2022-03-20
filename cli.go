@@ -74,7 +74,9 @@ func (d *DeLog) Init(ctx context.Context, baseDir string) error {
 		return err
 	}
 
-	// TODO(#17): add feature of commented out
+	if err := d.createDlDirIfNotExist(ctx, baseDir); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -106,6 +108,18 @@ func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
 	}
 
 	return os.Chmod(path, 0755)
+}
+
+func (d *DeLog) createDlDirIfNotExist(ctx context.Context, baseDir string) error {
+	path := filepath.Join(baseDir, ".dl")
+	if stat, err := os.Stat(path); err == nil {
+		if stat.IsDir() {
+			return nil
+		}
+		return fmt.Errorf("%s has been already existed as file. Please rename or delete it.", path)
+	}
+
+	return os.Mkdir(path, 0600)
 }
 
 // Remove deletes `$ dl clean` command from pre-commit script

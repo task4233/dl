@@ -86,6 +86,10 @@ func TestInit(t *testing.T) {
 			baseDir: "testdata/inited",
 			wantErr: false,
 		},
+		"failed when .dl, which is file, exists": {
+			baseDir: "testdata/inited-with-dl-file",
+			wantErr: true,
+		},
 		"failed because .git directory does not exists": {
 			baseDir: "testdata/clean", // there is not a .git in ./testdata/clean directory
 			wantErr: true,
@@ -93,6 +97,7 @@ func TestInit(t *testing.T) {
 	}
 
 	for name, tt := range tests {
+		name := name
 		tt := tt
 
 		t.Run(name, func(t *testing.T) {
@@ -106,18 +111,20 @@ func TestInit(t *testing.T) {
 			}
 
 			precommitFilePath := filepath.Join(tt.baseDir, ".git", "hooks", "pre-commit")
-
 			if _, err := os.Stat(precommitFilePath); os.IsNotExist(err) {
 				t.Fatalf("failed to create pre-commit script")
 			}
-
 			data, err := os.ReadFile(precommitFilePath)
 			if err != nil {
 				t.Fatalf("failed to read file: %v", err)
 			}
-
 			if !bytes.Contains(data, []byte("dl clean")) {
 				t.Fatalf("pre-commit script is not installed")
+			}
+
+			dlDirPath := filepath.Join(tt.baseDir, ".dl")
+			if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
+				t.Fatalf("failed to create .dl dir: %v", err)
 			}
 
 		})
