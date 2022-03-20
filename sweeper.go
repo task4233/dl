@@ -100,8 +100,6 @@ func (d *Sweeper) removeImportSpec(specs *[]ast.Spec) error {
 					d.dlPkgName = importSpec.Name.Name
 				}
 			}
-		default:
-			Printf("not implemented: %#v\nplease report this bug to https://github.com/task4233/dl/issues/new/choose 🙏", importSpec)
 		}
 	}
 
