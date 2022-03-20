@@ -19,7 +19,7 @@ func TestRun(t *testing.T) {
 		wantErr    bool
 	}{
 		"success with clean": {
-			args:    []string{"clean", "testdata/run"},
+			args:    []string{"clean", "testdata/run/clean"},
 			wantErr: false,
 		},
 		"success with init": {
