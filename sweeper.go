@@ -8,7 +8,9 @@ import (
 	"go/format"
 	"go/parser"
 	"go/token"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -24,15 +26,16 @@ func NewSweeper() *Sweeper {
 	}
 }
 
-// Sweep deletes all methods related to dl
-func (d *Sweeper) Sweep(ctx context.Context, targetPath string) error {
+// Sweep deletes all methods related to dl in a ".go" file.
+// This method requires ".dl" directory to exist.
+func (d *Sweeper) Sweep(ctx context.Context, targetFilePath string) error {
 	// validation
-	if !strings.HasSuffix(targetPath, ".go") {
-		return fmt.Errorf("targetPath is not .go file: %s", targetPath)
+	if !strings.HasSuffix(targetFilePath, ".go") {
+		return fmt.Errorf("targetPath is not .go file: %s", targetFilePath)
 	}
 
 	fset := token.NewFileSet()
-	fileAst, err := parser.ParseFile(fset, targetPath, nil, 0)
+	fileAst, err := parser.ParseFile(fset, targetFilePath, nil, 0)
 	if err != nil {
 		return err
 	}
@@ -78,7 +81,7 @@ func (d *Sweeper) Sweep(ctx context.Context, targetPath string) error {
 	if err := format.Node(writer, fset, fileAst); err != nil {
 		return err
 	}
-	if err := os.Rename(tmpFile.Name(), targetPath); err != nil {
+	if err := os.Rename(tmpFile.Name(), targetFilePath); err != nil {
 		return err
 	}
 
@@ -151,4 +154,40 @@ func createTmpFile() (f *os.File, fn func(), err error) {
 	}
 
 	return
+}
+
+// Evacuate copies ".go" files to under ".dl" directory.
+// This method requires ".dl" directory to exist.
+// This method doesn't allow to invoke with a file included in `excludeFiles`.
+func (d *Sweeper) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
+	// resolve path
+	rel, err := filepath.Rel(baseDirPath, srcFilePath)
+	if err != nil {
+		return err
+	}
+	targetPath := filepath.Join(baseDirPath, ".dl", rel)
+
+	srcFile, err := os.Open(srcFilePath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	parentDir := filepath.Join(targetPath, "..")
+	if _, err := os.Stat(parentDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(parentDir, 0700); err != nil {
+			return err
+		}
+	}
+	dstFile, err := os.Create(targetPath)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	if _, err := io.Copy(dstFile, srcFile); err != nil {
+		return err
+	}
+
+	return nil
 }

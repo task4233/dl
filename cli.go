@@ -46,15 +46,35 @@ func (d *DeLog) Run(ctx context.Context, version string, args []string) error {
 	}
 }
 
+var (
+	excludedFiles = []string{".dl", ".git"}
+)
+
 // Clean deletes all methods related to dl in ".go" files under the given directory path
 func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
-	return filepath.Walk(baseDir, func(path string, info fs.FileInfo, err error) error {
-		if strings.HasSuffix(path, ".go") {
-			fmt.Fprintf(os.Stderr, "remove dl from %s\n", path)
-			// might be good running concurrently?
-			return d.Sweeper.Sweep(ctx, path)
+	if _, err := os.Stat(filepath.Join(baseDir, ".dl")); os.IsNotExist(err) {
+		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", filepath.Join(baseDir, ".dl"))
+	}
+
+	return filepath.WalkDir(baseDir, func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to walkDir: %w", err)
 		}
-		return nil
+		if !strings.HasSuffix(path, ".go") {
+			return nil
+		}
+		for _, file := range excludedFiles {
+			if strings.Contains(path, file) {
+				return nil
+			}
+		}
+		if err := d.Sweeper.Evacuate(ctx, baseDir, path); err != nil {
+			return fmt.Errorf("failed to evacuate %s, %s", path, err.Error())
+		}
+
+		// might be good running concurrently? TODO(#7)
+		fmt.Fprintf(os.Stderr, "remove dl from %s\n", path)
+		return d.Sweeper.Sweep(ctx, path)
 	})
 }
 
@@ -73,19 +93,17 @@ func (d *DeLog) Init(ctx context.Context, baseDir string) error {
 	if err := d.addGitHookScript(ctx, baseDir); err != nil {
 		return err
 	}
-
 	if err := d.createDlDirIfNotExist(ctx, baseDir); err != nil {
 		return err
 	}
+
 	return nil
 }
-
 func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
 	path := filepath.Join(baseDir, ".git", "hooks")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return err
 	}
-
 	path = filepath.Join(path, "pre-commit")
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
 	if err != nil {
@@ -107,7 +125,7 @@ func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
 		return err
 	}
 
-	return os.Chmod(path, 0755)
+	return os.Chmod(path, 0700)
 }
 
 func (d *DeLog) createDlDirIfNotExist(ctx context.Context, baseDir string) error {
@@ -119,7 +137,7 @@ func (d *DeLog) createDlDirIfNotExist(ctx context.Context, baseDir string) error
 		return fmt.Errorf("%s has been already existed as file. Please rename or delete it.", path)
 	}
 
-	return os.Mkdir(path, 0600)
+	return os.Mkdir(path, 0700)
 }
 
 // Remove deletes `$ dl clean` command from pre-commit script
@@ -132,7 +150,6 @@ func (d *DeLog) Remove(ctx context.Context, baseDir string) error {
 	if buf == nil {
 		return nil
 	}
-
 	return removePrecommitScript(ctx, path, buf)
 }
 
@@ -163,7 +180,6 @@ func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
 		}
 		return nil
 	}
-
 	f, err := os.Create(path)
 	if err != nil {
 		return err
