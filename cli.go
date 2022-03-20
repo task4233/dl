@@ -84,16 +84,23 @@ func (d *DeLog) Clean(ctx context.Context, baseDir string) error {
 // Although these values will be casted to []byte, they are declared as constants
 // because that is't happened frequently.
 const (
-	precommitScript = `#!/bin/sh
+	preCommitScript = `#!/bin/sh
 dl clean .
 git add .
 `
-	cleanCmd = "dl clean"
+	postCommitScript = `#!/bin/sh
+dl restore .
+`
+	cleanCmd   = "dl clean"
+	restoreCmd = "dl restore"
 )
 
 // Init inserts dl command into git pre-commit hook
 func (d *DeLog) Init(ctx context.Context, baseDir string) error {
-	if err := d.addGitHookScript(ctx, baseDir); err != nil {
+	if err := d.addGitPreHookScript(ctx, baseDir); err != nil {
+		return err
+	}
+	if err := d.addGitPostHookScript(ctx, baseDir); err != nil {
 		return err
 	}
 	if err := d.createDlDirIfNotExist(ctx, baseDir); err != nil {
@@ -103,13 +110,13 @@ func (d *DeLog) Init(ctx context.Context, baseDir string) error {
 	return nil
 }
 
-func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
+func (d *DeLog) addGitPreHookScript(ctx context.Context, baseDir string) error {
 	path := filepath.Join(baseDir, ".git", "hooks")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return err
 	}
-	path = filepath.Join(path, "pre-commit")
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
+	preCommitPath := filepath.Join(path, "pre-commit")
+	f, err := os.OpenFile(preCommitPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
 	if err != nil {
 		return err
 	}
@@ -125,11 +132,41 @@ func (d *DeLog) addGitHookScript(ctx context.Context, baseDir string) error {
 		return nil
 	}
 
-	if _, err := fmt.Fprintf(f, precommitScript); err != nil {
+	if _, err := fmt.Fprintf(f, preCommitScript); err != nil {
 		return err
 	}
 
-	return os.Chmod(path, 0700)
+	return os.Chmod(preCommitPath, 0700)
+}
+
+func (d *DeLog) addGitPostHookScript(ctx context.Context, baseDir string) error {
+	path := filepath.Join(baseDir, ".git", "hooks")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return err
+	}
+
+	postCommitPath := filepath.Join(path, "post-commit")
+	f, err := os.OpenFile(postCommitPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0600)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// It checks if `$ dl restore` has been installed or not.
+	// If so, not inserting codes.
+	buf, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	if bytes.Contains(buf, []byte(restoreCmd)) {
+		return nil
+	}
+
+	if _, err := fmt.Fprintf(f, postCommitScript); err != nil {
+		return err
+	}
+
+	return os.Chmod(postCommitPath, 0700)
 }
 
 func (d *DeLog) createDlDirIfNotExist(ctx context.Context, baseDir string) error {
@@ -174,11 +211,11 @@ func readFile(ctx context.Context, path string) ([]byte, error) {
 }
 
 func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
-	idx := bytes.Index(buf, []byte(precommitScript))
+	idx := bytes.Index(buf, []byte(preCommitScript))
 	if idx < 0 {
 		return nil
 	}
-	if len(buf) == len(precommitScript) {
+	if len(buf) == len(preCommitScript) {
 		if err := os.Remove(path); err != nil {
 			return err
 		}
@@ -192,12 +229,12 @@ func removePrecommitScript(ctx context.Context, path string, buf []byte) error {
 
 	// 0 <= idx && idx < len(buf)-1	=> append(buf[:idx], buf[idx+len(precommitScript):]
 	// idx == len(buf)-len(preCommitScript)	=> buf[:idx]
-	if idx == len(buf)-len(precommitScript) {
+	if idx == len(buf)-len(preCommitScript) {
 		if _, err := f.Write(buf[:idx]); err != nil {
 			return err
 		}
 	} else {
-		if _, err := f.Write(append(buf[:idx], buf[idx+len(precommitScript):]...)); err != nil {
+		if _, err := f.Write(append(buf[:idx], buf[idx+len(preCommitScript):]...)); err != nil {
 			return err
 		}
 	}

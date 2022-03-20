@@ -111,21 +111,35 @@ func TestInit(t *testing.T) {
 				}
 				return
 			}
-			precommitFilePath := filepath.Join(tt.baseDir, ".git", "hooks", "pre-commit")
-			if _, err := os.Stat(precommitFilePath); os.IsNotExist(err) {
-				t.Fatalf("failed to create pre-commit script")
+			preCommitFilePath := filepath.Join(tt.baseDir, ".git", "hooks", "pre-commit")
+			if _, err := os.Stat(preCommitFilePath); os.IsNotExist(err) {
+				t.Fatalf("failed to create pre-commit script: %v", err)
 			}
-			data, err := os.ReadFile(precommitFilePath)
+			data, err := os.ReadFile(preCommitFilePath)
 			if err != nil {
 				t.Fatalf("failed to read file: %v", err)
 			}
 			if !bytes.Contains(data, []byte("dl clean")) {
 				t.Fatalf("pre-commit script is not installed")
 			}
+
 			dlDirPath := filepath.Join(tt.baseDir, ".dl")
 			if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
 				t.Fatalf("failed to create .dl dir: %v", err)
 			}
+
+			postCommitFilePath := filepath.Join(tt.baseDir, ".git", "hooks", "post-commit")
+			if _, err := os.Stat(postCommitFilePath); os.IsNotExist(err) {
+				t.Fatalf("failed to create post-commit script: %v", err)
+			}
+			data, err = os.ReadFile(postCommitFilePath)
+			if err != nil {
+				t.Fatalf("failed to read file: %v", err)
+			}
+			if !bytes.Contains(data, []byte("dl restore")) {
+				t.Fatalf("pre-commit script is not installed")
+			}
+
 		})
 	}
 }
