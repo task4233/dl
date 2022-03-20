@@ -7,6 +7,9 @@ dl(Debug x Log) - The instant logger package for debug
 [![codecov](https://codecov.io/gh/task4233/dl/branch/main/graph/badge.svg?token=xrhysp4Tzf)](https://codecov.io/gh/task4233/dl)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
+
+![delog.gif](https://user-images.githubusercontent.com/29667656/159164178-f72aede7-f825-438a-add6-aa3deedf8c4c.gif)
+
 ## Description
 Who doesn't write wrong codes? No one.  
 Then, programs don't work well, and developers write logs for debugging to understand what happens.
