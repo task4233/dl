@@ -71,8 +71,6 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 		return err
 	}
 
-	ast.Print(fset, fileAst)
-
 	for _, decl := range fileAst.Decls {
 		switch w := decl.(type) {
 		case *ast.GenDecl:
@@ -145,27 +143,57 @@ func (c *Clean) removeImportSpec(ctx context.Context, specs *[]ast.Spec) error {
 func (c *Clean) removeDlStmt(ctx context.Context, statements *[]ast.Stmt) error {
 	for idx, stmt := range *statements {
 		switch exp := stmt.(type) {
-		case *ast.ExprStmt:
-			c.scanDlIdentInExpr(ctx, &exp.X, idx)
 		case *ast.AssignStmt:
-			for _, expr := range exp.Lhs {
-				c.scanDlIdentInExpr(ctx, &expr, idx)
-			}
 			for _, expr := range exp.Rhs {
-				c.scanDlIdentInExpr(ctx, &expr, idx)
+				if err := c.scanDlIdentInExpr(ctx, &expr, idx); err != nil {
+					return err
+				}
 			}
 		case *ast.BlockStmt:
 			if err := c.removeDlStmt(ctx, &exp.List); err != nil {
+				return err
+			}
+		// select
+		case *ast.CommClause:
+			{
+				if err := c.removeDlStmt(ctx, &exp.Body); err != nil {
+					return err
+				}
+			}
+		case *ast.CaseClause:
+			if err := c.removeDlStmt(ctx, &exp.Body); err != nil {
+				return err
+			}
+		case *ast.DeclStmt:
+			switch decl := exp.Decl.(type) {
+			case *ast.FuncDecl:
+				Info(decl)
+				if err := c.removeDlStmt(ctx, &decl.Body.List); err != nil {
+					return err
+				}
+			case *ast.GenDecl:
+				// As expressions are not allowed here, ignore this stmt
+			default:
+				Info(decl)
+			}
+		case *ast.ExprStmt:
+			if err := c.scanDlIdentInExpr(ctx, &exp.X, idx); err != nil {
 				return err
 			}
 		case *ast.ForStmt:
 			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
 				return err
 			}
+		case *ast.GoStmt:
+			if err := c.scanDlIdentInCallExpr(ctx, exp.Call, idx); err != nil {
+				return err
+			}
 		case *ast.IfStmt:
 			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
 				return err
 			}
+		case *ast.SendStmt:
+			// TODO: As expressions are not allowed here, ignore this stmt for now
 		case *ast.SelectStmt:
 			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
 				return err
@@ -182,9 +210,14 @@ func (c *Clean) removeDlStmt(ctx context.Context, statements *[]ast.Stmt) error 
 			if err := c.removeDlStmt(ctx, &exp.Body.List); err != nil {
 				return err
 			}
+			if err := c.scanDlIdentInExpr(ctx, &exp.Key, idx); err != nil {
+				return err
+			}
 		case *ast.ReturnStmt:
 			for _, expr := range exp.Results {
-				c.scanDlIdentInExpr(ctx, &expr, idx)
+				if err := c.scanDlIdentInExpr(ctx, &expr, idx); err != nil {
+					return err
+				}
 			}
 		default:
 			Printf("not implemented: %#v\nplease report this bug to https://github.com/task4233/dl/issues/new/choose 🙏\n", exp)
@@ -199,20 +232,40 @@ func (c *Clean) removeDlStmt(ctx context.Context, statements *[]ast.Stmt) error 
 	return nil
 }
 
-func (c *Clean) scanDlIdentInExpr(ctx context.Context, expr *ast.Expr, idx int) {
+func (c *Clean) scanDlIdentInExpr(ctx context.Context, expr *ast.Expr, idx int) error {
 	switch x := (*expr).(type) {
 	case *ast.CallExpr:
-		switch fun := x.Fun.(type) {
-		case *ast.SelectorExpr:
-			switch x2 := fun.X.(type) {
-			case *ast.Ident:
-				if c.dlPkgName == x2.Name {
-					c.removedIdxs.Push(idx)
-				}
+		return c.scanDlIdentInCallExpr(ctx, x, idx)
+	case *ast.UnaryExpr:
+		return c.scanDlIdentInExpr(ctx, &x.X, idx)
+	case *ast.Ident:
+		switch v := x.Obj.Decl.(type) {
+		case *ast.Stmt:
+			// TODO: fix here...?
+			st := []ast.Stmt{*v}
+			return c.removeDlStmt(ctx, &st)
+		}
+	case *ast.FuncLit:
+		if err := c.removeDlStmt(ctx, &x.Body.List); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Clean) scanDlIdentInCallExpr(ctx context.Context, expr *ast.CallExpr, idx int) error {
+	switch fun := expr.Fun.(type) {
+	case *ast.SelectorExpr:
+		switch x2 := fun.X.(type) {
+		case *ast.Ident:
+			if c.dlPkgName == x2.Name {
+				c.removedIdxs.Push(idx)
 			}
 		}
 	}
 
+	return nil
 }
 
 // Evacuate copies ".go" files to under ".dl" directory.

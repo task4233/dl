@@ -50,6 +50,14 @@ func TestClean(t *testing.T) {
 			targetPath: "testdata/clean/g.go",
 			wantErr:    false,
 		},
+		"success with various expressions": {
+			targetPath: "testdata/clean/h.go",
+			wantErr:    false,
+		},
+		"success with func decl": {
+			targetPath: "testdata/clean/i.go",
+			wantErr:    false,
+		},
 		"failed with invalid extension": {
 			targetPath: "README.md",
 			wantErr:    true,
