@@ -8,7 +8,7 @@ import (
 	"go/format"
 	"go/parser"
 	"go/token"
-	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,19 +16,48 @@ import (
 
 const dlPath = "\"github.com/task4233/dl\""
 
-type Sweeper struct {
+var _ Cmd = (*Clean)(nil)
+
+type Clean struct {
 	dlPkgName string
 }
 
-func NewSweeper() *Sweeper {
-	return &Sweeper{
+func NewClean() *Clean {
+	return &Clean{
 		dlPkgName: "dl", // default package name
 	}
 }
 
+var (
+	excludedFiles = []string{dlDir, ".git"}
+)
+
+// Run deletes all methods related to dl in ".go" files under the given directory path
+func (c *Clean) Run(ctx context.Context, baseDir string) error {
+	dlDirPath := filepath.Join(baseDir, dlDir)
+	if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
+		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", dlDirPath)
+	}
+
+	return walkDirWithValidation(ctx, baseDir, func(path string, info fs.DirEntry) error {
+		for _, file := range excludedFiles {
+			if strings.Contains(path, file) {
+				return nil
+			}
+		}
+		if err := c.Evacuate(ctx, baseDir, path); err != nil {
+			return fmt.Errorf("failed to evacuate %s, %s", path, err.Error())
+		}
+
+		// might be good running concurrently? TODO(#7)
+		fmt.Fprintf(os.Stderr, "remove dl from %s\n", path)
+		return c.Sweep(ctx, path)
+	})
+}
+
 // Sweep deletes all methods related to dl in a ".go" file.
 // This method requires ".dl" directory to exist.
-func (d *Sweeper) Sweep(ctx context.Context, targetFilePath string) error {
+func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 	// validation
 	if !strings.HasSuffix(targetFilePath, ".go") {
 		return fmt.Errorf("targetPath is not .go file: %s", targetFilePath)
@@ -45,13 +74,13 @@ func (d *Sweeper) Sweep(ctx context.Context, targetFilePath string) error {
 		case *ast.GenDecl:
 			// check import alias
 			if w.Tok.String() == "import" {
-				if err := d.removeImportSpec(&w.Specs); err != nil {
+				if err := c.removeImportSpec(&w.Specs); err != nil {
 					return err
 				}
 			}
 		case *ast.FuncDecl:
 			// remove all methods
-			if err := d.removedlStmt(&w.Body.List); err != nil {
+			if err := c.removedlStmt(&w.Body.List); err != nil {
 				return err
 			}
 		}
@@ -67,11 +96,12 @@ func (d *Sweeper) Sweep(ctx context.Context, targetFilePath string) error {
 	}
 
 	// overwriting
-	tmpFile, cleanUp, err := createTmpFile()
+	// might be change to GOTMPDIR
+	tmpFile, err := os.CreateTemp("", "_dl.go")
 	if err != nil {
 		return err
 	}
-	defer cleanUp()
+	defer os.Remove(tmpFile.Name())
 
 	writer := bufio.NewWriter(tmpFile)
 	defer writer.Flush()
@@ -88,7 +118,7 @@ func (d *Sweeper) Sweep(ctx context.Context, targetFilePath string) error {
 	return nil
 }
 
-func (d *Sweeper) removeImportSpec(specs *[]ast.Spec) error {
+func (c *Clean) removeImportSpec(specs *[]ast.Spec) error {
 	var removedIdx int = -1
 
 	for importSpecIdx, spec := range *specs {
@@ -97,7 +127,7 @@ func (d *Sweeper) removeImportSpec(specs *[]ast.Spec) error {
 			if importSpec.Path != nil && importSpec.Path.Value == dlPath {
 				removedIdx = importSpecIdx
 				if importSpec.Name != nil {
-					d.dlPkgName = importSpec.Name.Name
+					c.dlPkgName = importSpec.Name.Name
 				}
 			}
 		}
@@ -110,7 +140,7 @@ func (d *Sweeper) removeImportSpec(specs *[]ast.Spec) error {
 	return nil
 }
 
-func (d *Sweeper) removedlStmt(statements *[]ast.Stmt) error {
+func (c *Clean) removedlStmt(statements *[]ast.Stmt) error {
 	removedIdxs := []int{}
 
 	for idx, stmt := range *statements {
@@ -122,7 +152,7 @@ func (d *Sweeper) removedlStmt(statements *[]ast.Stmt) error {
 				case *ast.SelectorExpr:
 					switch x2 := fun.X.(type) {
 					case *ast.Ident:
-						if d.dlPkgName == x2.Name {
+						if c.dlPkgName == x2.Name {
 							removedIdxs = append(removedIdxs, idx)
 						}
 					}
@@ -141,73 +171,23 @@ func (d *Sweeper) removedlStmt(statements *[]ast.Stmt) error {
 	return nil
 }
 
-// createTmpFile creates a temporary file and return *os.File and a cleanUp function
-func createTmpFile() (f *os.File, fn func(), err error) {
-	// might be change to GOTMPDIR
-	f, err = os.CreateTemp("", "_dl.go")
-	if err == nil {
-		fn = func() {
-			os.Remove(f.Name())
-		}
-	}
-
-	return
-}
-
 // Evacuate copies ".go" files to under ".dl" directory.
 // This method requires ".dl" directory to exist.
 // This method doesn't allow to invoke with a file included in `excludeFiles`.
-func (d *Sweeper) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
+func (c *Clean) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
 	// resolve path
 	rel, err := filepath.Rel(baseDirPath, srcFilePath)
 	if err != nil {
 		return err
 	}
-	targetPath := filepath.Join(baseDirPath, ".dl", rel)
 
-	srcFile, err := os.Open(srcFilePath)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	parentDir := filepath.Join(targetPath, "..")
+	targetFilePath := filepath.Join(baseDirPath, ".dl", rel)
+	parentDir := filepath.Join(targetFilePath, "..")
 	if _, err := os.Stat(parentDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(parentDir, 0755); err != nil {
 			return err
 		}
 	}
-	dstFile, err := os.Create(targetPath)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
 
-	if _, err := io.Copy(dstFile, srcFile); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Restore copies ".go" files to raw places.
-// This method requires ".dl" directory to exist.
-func (s *Sweeper) Restore(ctx context.Context, srcFilePath string, dstFilePath string) error {
-	srcFile, err := os.Open(srcFilePath)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	dstFile, err := os.Create(dstFilePath)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	if _, err := io.Copy(dstFile, srcFile); err != nil {
-		return err
-	}
-
-	return nil
+	return copyFile(ctx, targetFilePath, srcFilePath)
 }

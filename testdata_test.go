@@ -1,4 +1,4 @@
-package dl
+package dl_test
 
 import (
 	"archive/zip"

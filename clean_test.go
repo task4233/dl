@@ -1,4 +1,4 @@
-package dl
+package dl_test
 
 import (
 	"bytes"
@@ -7,14 +7,15 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/task4233/dl"
 )
 
 func init() {
 	once.Do(extractZip)
 }
 
-// TestSweep invokes cli.Clean which invokes sweeper.Sweep inside
-func TestSweep(t *testing.T) {
+// TestClean invokes cli.Clean which invokes sweeper.Sweep inside
+func TestClean(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
@@ -61,9 +62,7 @@ func TestSweep(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			sweeper := NewSweeper()
-
-			err := sweeper.Sweep(context.Background(), tt.targetPath)
+			err := dl.NewClean().Sweep(context.Background(), tt.targetPath)
 			if err != nil {
 				if (err != nil) != tt.wantErr {
 					t.Fatalf("unexpected error, wantError=%v, got=%v", tt.wantErr, err)
@@ -111,7 +110,7 @@ func TestEvacuate(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			err := NewSweeper().Evacuate(context.Background(), tt.baseDirPath, tt.targetFilePath)
+			err := dl.NewClean().Evacuate(context.Background(), tt.baseDirPath, tt.targetFilePath)
 
 			if err != nil {
 				if (err != nil) != tt.wantErr {
@@ -139,39 +138,4 @@ func TestEvacuate(t *testing.T) {
 		})
 	}
 
-}
-
-func TestRestore(t *testing.T) {
-	t.Parallel()
-
-	tests := map[string]struct {
-		srcFilePath string
-		dstFilePath string
-		wantErr     bool
-	}{
-		"failed with unexisted src file path": {
-			srcFilePath: "unexisted/filepath",
-			wantErr:     true,
-		},
-		"failed with irregal dst file path": {
-			srcFilePath: "testdata/restore/test.go",
-			dstFilePath: "/root",
-			wantErr:     true,
-		},
-	}
-
-	for name, tt := range tests {
-		tt := tt
-
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			err := NewSweeper().Restore(context.Background(), tt.srcFilePath, tt.dstFilePath)
-			if err != nil {
-				if (err != nil) != tt.wantErr {
-					t.Fatalf("unexpected error: want=%v, got=%v", tt.wantErr, err)
-				}
-				return
-			}
-		})
-	}
 }
