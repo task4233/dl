@@ -30,6 +30,14 @@ func TestRun(t *testing.T) {
 			args:    []string{"remove", "testdata/run/remove"},
 			wantErr: false,
 		},
+		"failed clean with uninited directory": {
+			args:    []string{"clean", "testdata/run/clean-with-uninited"},
+			wantErr: true,
+		},
+		"failed clean with excluded directory": {
+			args:    []string{"clean", "testdata/run/clean/.dl"},
+			wantErr: true,
+		},
 		"failed with unknown command": {
 			args:    []string{"hoge"},
 			wantErr: true,
