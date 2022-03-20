@@ -143,4 +143,4 @@ $ dl remove .
 Please feel free to make [issues](https://github.com/task4233/dl/issues/new/choose) and pull requests.
 
 ## Author
-[task4233](https://task4233.dev)
+[task4233](https://github.com/task4233)
