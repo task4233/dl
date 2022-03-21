@@ -3,6 +3,7 @@ package dl
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/format"
@@ -12,21 +13,25 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/tools/go/ast/astutil"
 )
 
-const dlPath = "\"github.com/task4233/dl\""
+const dlPackageUrl = "\"github.com/task4233/dl\""
 
 var _ Cmd = (*Clean)(nil)
 
 type Clean struct {
 	dlPkgName   string
 	removedIdxs *IntHeap
+	astFile     *ast.File
 }
 
 func NewClean() *Clean {
 	return &Clean{
 		dlPkgName:   "dl", // default package name
 		removedIdxs: &IntHeap{},
+		astFile:     nil,
 	}
 }
 
@@ -66,32 +71,59 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 	}
 
 	fset := token.NewFileSet()
-	fileAst, err := parser.ParseFile(fset, targetFilePath, nil, parser.ParseComments)
+	var err error
+	c.astFile, err = parser.ParseFile(fset, targetFilePath, nil, parser.ParseComments)
 	if err != nil {
 		return err
 	}
 
-	for _, decl := range fileAst.Decls {
-		switch w := decl.(type) {
+	var ok bool
+	c.astFile, ok = astutil.Apply(c.astFile, func(cur *astutil.Cursor) bool {
+		// if c.Node belongs importspec, remove import statement for dl
+		found, err := c.findDlImportInImportSpec(ctx, cur)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v", err)
+			return true
+		}
+		if found {
+			cur.Delete()
+			return true
+		}
+
+		// if c.Node belongs ExprStmt, remove callExpr for dl
+		found, err = c.findDlInvocationInCallExpr(ctx, cur)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v", err)
+			return true
+		}
+		if found {
+			cur.Delete()
+			return true
+		}
+
+		// if return false, traversing is stopped immediately
+		return true
+	}, nil).(*ast.File)
+
+	// remove import spec when it's empty
+	for idx, decl := range c.astFile.Decls {
+		switch d := decl.(type) {
 		case *ast.GenDecl:
-			// check import alias
-			if err := c.removeImportSpec(ctx, &w.Specs); err != nil {
-				return err
-			}
-		case *ast.FuncDecl:
-			// remove all methods
-			if err := c.removeDlStmts(ctx, &w.Body.List); err != nil {
-				return err
+			if len(d.Specs) == 0 {
+				c.removedIdxs.Push(idx)
 			}
 		}
 	}
+	if !ok {
+		return errors.New("failed type conversion from any to *ast.File")
+	}
 
-	// if import spec is empty, remove import gen decl
-	if len(fileAst.Decls) > 0 {
-		if importDecl, ok := fileAst.Decls[0].(*ast.GenDecl); ok {
-			if len(importDecl.Specs) == 0 {
-				fileAst.Decls = fileAst.Decls[1:]
-			}
+	for c.removedIdxs.Len() > 0 {
+		idx := c.removedIdxs.Pop()
+		if !(idx+1 < len(c.astFile.Decls)) {
+			c.astFile.Decls = c.astFile.Decls[:idx]
+		} else {
+			c.astFile.Decls = append(c.astFile.Decls[:idx], c.astFile.Decls[idx+1:]...)
 		}
 	}
 
@@ -106,9 +138,7 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 	writer := bufio.NewWriter(tmpFile)
 	defer writer.Flush()
 
-	fset = token.NewFileSet()
-
-	if err := format.Node(writer, fset, fileAst); err != nil {
+	if err := format.Node(writer, fset, c.astFile); err != nil {
 		return err
 	}
 	if err := os.Rename(tmpFile.Name(), targetFilePath); err != nil {
@@ -118,121 +148,34 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 	return nil
 }
 
-func (c *Clean) removeImportSpec(ctx context.Context, specs *[]ast.Spec) error {
-	var removedIdx int = -1
-
-	for importSpecIdx, spec := range *specs {
-		switch exp := spec.(type) {
-		case *ast.ImportSpec:
-			if exp.Path != nil && exp.Path.Value == dlPath {
-				removedIdx = importSpecIdx
-				if exp.Name != nil {
-					c.dlPkgName = exp.Name.Name
-				}
-			}
-		}
+func (c *Clean) findDlImportInImportSpec(ctx context.Context, cr *astutil.Cursor) (bool, error) {
+	switch node := cr.Node().(type) {
+	case *ast.ImportSpec:
+		return cr.Index() >= 0 && node.Path.Value == dlPackageUrl, nil
 	}
 
-	if removedIdx < 0 {
-		return nil
-	}
-	*specs = append((*specs)[:removedIdx], (*specs)[removedIdx+1:]...)
-	return nil
+	return false, nil
 }
 
-func (c *Clean) removeDlStmts(ctx context.Context, statements *[]ast.Stmt) error {
-	for idx, stmt := range *statements {
-		if err := c.removeDlStmt(ctx, &stmt, idx); err != nil {
-			return err
-		}
-	}
-
-	for c.removedIdxs.Len() > 0 {
-		idx := c.removedIdxs.Pop()
-		*statements = append((*statements)[:idx], (*statements)[idx+1:]...)
-	}
-
-	return nil
-}
-
-func (c *Clean) removeDlStmt(ctx context.Context, stmt *ast.Stmt, idx int) error {
-	switch exp := (*stmt).(type) {
-	case *ast.AssignStmt:
-		for _, expr := range exp.Rhs {
-			if err := c.scanDlIdentInExpr(ctx, &expr, idx); err != nil {
-				return err
-			}
-		}
-	case *ast.BlockStmt:
-		return c.removeDlStmts(ctx, &exp.List)
-	case *ast.CommClause:
-		{
-			return c.removeDlStmts(ctx, &exp.Body)
-		}
-	case *ast.CaseClause:
-		return c.removeDlStmts(ctx, &exp.Body)
-	case *ast.DeclStmt:
-		// As expressions are not allowed here, ignore this stmt
+func (c *Clean) findDlInvocationInCallExpr(ctx context.Context, cr *astutil.Cursor) (bool, error) {
+	switch node := cr.Node().(type) {
 	case *ast.ExprStmt:
-		return c.scanDlIdentInExpr(ctx, &exp.X, idx)
-	case *ast.ForStmt:
-		return c.removeDlStmts(ctx, &exp.Body.List)
-	case *ast.GoStmt:
-		return c.scanDlIdentInCallExpr(ctx, exp.Call, idx)
-	case *ast.IfStmt:
-		return c.removeDlStmts(ctx, &exp.Body.List)
-	case *ast.SendStmt:
-		// TODO: As expressions are not allowed here, ignore this stmt for now
-	case *ast.SelectStmt:
-		return c.removeDlStmts(ctx, &exp.Body.List)
-	case *ast.SwitchStmt:
-		return c.removeDlStmts(ctx, &exp.Body.List)
-	case *ast.TypeSwitchStmt:
-		return c.removeDlStmts(ctx, &exp.Body.List)
-	case *ast.RangeStmt:
-		if err := c.removeDlStmts(ctx, &exp.Body.List); err != nil {
-			return err
-		}
-		if err := c.scanDlIdentInExpr(ctx, &exp.Key, idx); err != nil {
-			return err
-		}
-	case *ast.ReturnStmt:
-		for _, expr := range exp.Results {
-			if err := c.scanDlIdentInExpr(ctx, &expr, idx); err != nil {
-				return err
+		switch x := node.X.(type) {
+		case *ast.CallExpr:
+			fun, ok := x.Fun.(*ast.SelectorExpr)
+			if !ok {
+				return false, fmt.Errorf("fun is not *ast.SelectorExpr: %v", x.Fun)
 			}
-		}
-	default:
-		Printf("not implemented: %#v\nplease report this bug to https://github.com/task4233/dl/issues/new/choose 🙏\n", exp)
-	}
-	return nil
-}
-
-func (c *Clean) scanDlIdentInExpr(ctx context.Context, expr *ast.Expr, idx int) error {
-	switch x := (*expr).(type) {
-	case *ast.CallExpr:
-		return c.scanDlIdentInCallExpr(ctx, x, idx)
-	case *ast.FuncLit:
-		if err := c.removeDlStmts(ctx, &x.Body.List); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c *Clean) scanDlIdentInCallExpr(ctx context.Context, expr *ast.CallExpr, idx int) error {
-	switch fun := expr.Fun.(type) {
-	case *ast.SelectorExpr:
-		switch x2 := fun.X.(type) {
-		case *ast.Ident:
-			if c.dlPkgName == x2.Name {
-				c.removedIdxs.Push(idx)
+			x2, ok := fun.X.(*ast.Ident)
+			if !ok {
+				return false, fmt.Errorf("x2 is not *ast.Ident: %v", fun.X)
 			}
+
+			// check node is in a slice
+			return cr.Index() >= 0 && c.dlPkgName == x2.Name, nil
 		}
 	}
-
-	return nil
+	return false, nil
 }
 
 // Evacuate copies ".go" files to under ".dl" directory.
