@@ -1,8 +1,11 @@
 package dl
 
 import (
+	"container/heap"
 	"context"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestCopyFile(t *testing.T) {
@@ -38,4 +41,44 @@ func TestCopyFile(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestIntHeap(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		args []int
+		want []int
+	}{
+		"3, 1, 5, 7, 9": {
+			args: []int{3, 1, 5, 7, 9},
+			want: []int{9, 7, 5, 3, 1},
+		},
+		"9, 5, 7, 3, 1": {
+			args: []int{9, 5, 7, 3, 1},
+			want: []int{9, 7, 5, 3, 1},
+		},
+	}
+
+	for name, tt := range tests {
+		tt := tt
+
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			h := IntHeap(tt.args)
+			heap.Init(&h)
+
+			got := make([]int, 0, h.Len())
+			for h.Len() > 0 {
+				got = append(got, heap.Pop(&h).(int))
+			}
+
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("-want,+got\n%s", diff)
+			}
+		})
+
+	}
+
 }

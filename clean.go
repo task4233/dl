@@ -2,6 +2,7 @@ package dl
 
 import (
 	"bufio"
+	"container/heap"
 	"context"
 	"errors"
 	"fmt"
@@ -23,14 +24,17 @@ var _ Cmd = (*Clean)(nil)
 
 type Clean struct {
 	dlPkgName   string
-	removedIdxs *IntHeap
+	removedIdxs heap.Interface
 	astFile     *ast.File
 }
 
 func NewClean() *Clean {
+	h := &IntHeap{}
+	heap.Init(h)
+
 	return &Clean{
 		dlPkgName:   "dl", // default package name
-		removedIdxs: &IntHeap{},
+		removedIdxs: h,
 		astFile:     nil,
 	}
 }
@@ -145,7 +149,7 @@ func (c *Clean) removeDlFromAst(ctx context.Context) error {
 	}
 
 	for c.removedIdxs.Len() > 0 {
-		idx := c.removedIdxs.Pop()
+		idx := c.removedIdxs.Pop().(int)
 		if !(idx+1 < len(c.astFile.Decls)) {
 			c.astFile.Decls = c.astFile.Decls[:idx]
 		} else {
