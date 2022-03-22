@@ -9,11 +9,14 @@ import (
 )
 
 // FInfo gives a val, a type, a file name, a line number and writes to w..
-func FInfo(w io.Writer, v any) (int, error) {
+func FInfo[T any](w io.Writer, v ...T) (int, error) {
+	if len(v) == 1 {
+		return finfo(w, v[0], 2)
+	}
 	return finfo(w, v, 2)
 }
 
-func finfo(w io.Writer, v any, depth int) (int, error) {
+func finfo[T any](w io.Writer, v T, depth int) (int, error) {
 	_, file, line, ok := runtime.Caller(depth)
 	if !ok {
 		return Fprintf(w, "failed FInfo: %v", v)
@@ -27,7 +30,10 @@ func finfo(w io.Writer, v any, depth int) (int, error) {
 }
 
 // Info gives a val, a type, a file name, a line number to print to the standard logger.
-func Info(v ...any) (int, error) {
+func Info[T any](v ...T) (int, error) {
+	if len(v) == 1 {
+		return finfo(os.Stderr, v[0], 2)
+	}
 	return finfo(os.Stderr, v, 2)
 }
 

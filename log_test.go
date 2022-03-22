@@ -138,3 +138,43 @@ func TestFInfo(t *testing.T) {
 		})
 	}
 }
+
+// TestFInfoWithEachType needs different arguments.
+// That's why, this test doesn't adopt table-driven testing.
+func TestFInfoWithEachType(t *testing.T) {
+	t.Parallel()
+
+	// build error
+	// t.Run("empty argument should occur error", func(t *testing.T) {
+	// 	t.Parallel()
+	// 	// dl.Info()
+	// })
+
+	t.Run("one arugment should output the argument", func(t *testing.T) {
+		t.Parallel()
+
+		var num int
+		out := new(bytes.Buffer)
+		if _, err := dl.FInfo(out, num); err != nil {
+			t.Fatalf("Info with one argument should output the argument")
+		}
+
+		if !strings.Contains(out.String(), "[DeLog]") {
+			t.Fatalf("failed TestPrintf, \nwant=%s,got=%s", "[DeLog]", out.String())
+		}
+	})
+
+	t.Run("multi arugments should output the arguments", func(t *testing.T) {
+		t.Parallel()
+
+		var nums []int
+		out := new(bytes.Buffer)
+		if _, err := dl.FInfo(out, nums); err != nil {
+			t.Fatalf("Info with one argument should output the argument")
+		}
+
+		if !strings.Contains(out.String(), "[DeLog]") {
+			t.Fatalf("failed TestPrintf, \nwant=%s,got=%s", "[DeLog]", out.String())
+		}
+	})
+}
