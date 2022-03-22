@@ -32,19 +32,12 @@ type Clean struct {
 }
 
 func NewClean() *Clean {
-	h := &IntHeap{}
-	heap.Init(h)
-
 	return &Clean{
 		dlPkgName:   "dl", // default package name
-		removedIdxs: h,
+		removedIdxs: NewIntHeap(nil),
 		astFile:     nil,
 	}
 }
-
-var (
-	excludedFiles = []string{dlDir, ".git"}
-)
 
 // Run deletes all methods related to dl in ".go" files under the given directory path
 func (c *Clean) Run(ctx context.Context, baseDir string) error {
@@ -53,7 +46,9 @@ func (c *Clean) Run(ctx context.Context, baseDir string) error {
 		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", dlDirPath)
 	}
 
-	return walkDirWithValidation(ctx, baseDir, func(path string, info fs.DirEntry) error {
+	return walkDirWithValidation(ctx, baseDir, func(ctx context.Context, path string, info fs.DirEntry) error {
+		// TODO: make getter
+		excludedFiles := []string{dlDir, ".git"}
 		for _, file := range excludedFiles {
 			if strings.Contains(path, file) {
 				return nil
@@ -214,7 +209,7 @@ func (c *Clean) findDlInvocationInCallExpr(ctx context.Context, callExpr *ast.Ca
 // Evacuate copies ".go" files to under ".dl" directory.
 // This method requires ".dl" directory to exist.
 // This method doesn't allow to invoke with a file included in `excludeFiles`.
-func (c *Clean) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
+func (c Clean) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
 	// resolve path
 	rel, err := filepath.Rel(baseDirPath, srcFilePath)
 	if err != nil {

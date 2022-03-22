@@ -66,12 +66,12 @@ func TestIntHeap(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			h := IntHeap(tt.args)
-			heap.Init(&h)
+			h := NewIntHeap(tt.args)
 
 			got := make([]int, 0, h.Len())
+
 			for h.Len() > 0 {
-				got = append(got, heap.Pop(&h).(int))
+				got = append(got, heap.Pop(h).(int))
 			}
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
