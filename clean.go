@@ -18,7 +18,10 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
-const dlPackageUrl = "\"github.com/task4233/dl\""
+const (
+	dlPackageUrl = `"github.com/task4233/dl"`
+	issueRequest = `\nPlease report this bug to https://github.com/task4233/dl/issues/new/choose if possible🙏\n`
+)
 
 var _ Cmd = (*Clean)(nil)
 
@@ -112,7 +115,7 @@ func (c *Clean) removeDlFromAst(ctx context.Context) error {
 		// if c.Node belongs importspec, remove import statement for dl
 		found, err := c.findDlImportInImportSpec(ctx, cur)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v", err)
+			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v"+issueRequest, err)
 			return true
 		}
 		if found {
@@ -123,7 +126,7 @@ func (c *Clean) removeDlFromAst(ctx context.Context) error {
 		// if c.Node belongs ExprStmt, remove callExpr for dl
 		found, err = c.findDlInvocationInStmt(ctx, cur)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v", err)
+			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v"+issueRequest, err)
 			return true
 		}
 		if found {
