@@ -30,7 +30,7 @@ func TestInit(t *testing.T) {
 			baseDir: "testdata/inited",
 			wantErr: false,
 		},
-		"failed when .dl, which is file, exists": {
+		"failed when .dl, which is **file**, exists": {
 			baseDir: "testdata/inited-with-dl-file",
 			wantErr: true,
 		},

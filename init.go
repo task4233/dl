@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"go.uber.org/multierr"
 )
 
 var _ Cmd = (*Init)(nil)
@@ -26,17 +28,17 @@ func (i *Init) Run(ctx context.Context, baseDir string) error {
 		return err
 	}
 
-	// Initialization
-	if err := i.addGitPreHookScript(ctx, baseDir); err != nil {
-		return err
-	}
-	if err := i.addGitPostHookScript(ctx, baseDir); err != nil {
-		return err
-	}
-	if err := i.createDlDirIfNotExist(ctx, baseDir); err != nil {
-		return err
-	}
-	if err := i.addDlIntoGitIgnore(ctx, baseDir); err != nil {
+	// As it prevents to miss created files when an error occurs,
+	// it handles errors all together at last.
+	err := i.addGitPreHookScript(ctx, baseDir)
+	err = multierr.Append(err, i.addGitPostHookScript(ctx, baseDir))
+	err = multierr.Append(err, i.createDlDirIfNotExist(ctx, baseDir))
+	err = multierr.Append(err, i.addDlIntoGitIgnore(ctx, baseDir))
+	if err != nil {
+		// rollback
+		if removeErr := NewRemove().Run(ctx, baseDir); err != nil {
+			err = multierr.Append(err, removeErr)
+		}
 		return err
 	}
 
