@@ -12,7 +12,7 @@ dl(Debug x Log) - The instant logger package for debug
 
 ## Description
 Who doesn't write wrong codes? No one.  
-Then, programs don't work well, and developers write logs for debugging to understand what happens.
+Then, programs don't work well, and developers write logs for debug to understand what happens.
 
 However, some developers forget to delete their logs after resolving the problem and push their codes. In the worse case, the logs might be released.
 
@@ -21,7 +21,7 @@ However, some developers forget to delete their logs after resolving the problem
 ## Features
 - **Logging package for debug in Go**
 - **Command for Sweeping all functions of this package**
-- **Command for installing git pre-commit hook**
+- **Command for installing git hooks and .gitignore**
 
 ## Installation
 ### Go1.18
@@ -67,7 +67,7 @@ func main() {
 // [DeLog] info: main.U[int]{5, 3} (main.U[int]) prog.go:18
 ```
 
-### Adds dl into pre-commit of Git
+### Adds dl into Git hooks
 1. Please run commands below to install dl in your Git repository.
 
 ```bash
@@ -133,7 +133,29 @@ index 90a78bd..0e28e8a 100644
  }
 ```
 
-### Remove dl from pre-commit of Git
+- removed `delog` codes are restored(not commited)
+
+```bash
+$ cat main.go 
+package main
+
+import (
+	"fmt"
+	
+	"github.com/task4233/dl"
+)
+
+func SayHi[T any](v T) {
+	dl.Printf("Type: %T, v: %v\n", v, v) // This statement can be removed by `$ dl clean main.go`
+	fmt.Println("Hi, ", v)
+}
+
+func main() {
+    SayHi("hoge")
+}
+```
+
+### Remove dl from GitHooks
 
 ```bash
 $ dl remove .
