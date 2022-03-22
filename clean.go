@@ -77,6 +77,32 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 		return err
 	}
 
+	if err := c.removeDlFromAst(ctx); err != nil {
+		return err
+	}
+
+	// overwriting
+	// tmp file is created in $GOTMPDIR
+	tmpFile, err := os.CreateTemp("", "_dl.go")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	writer := bufio.NewWriter(tmpFile)
+	defer writer.Flush()
+
+	if err := format.Node(writer, fset, c.astFile); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpFile.Name(), targetFilePath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Clean) removeDlFromAst(ctx context.Context) error {
 	var ok bool
 	c.astFile, ok = astutil.Apply(c.astFile, func(cur *astutil.Cursor) bool {
 		// if c.Node belongs importspec, remove import statement for dl
@@ -91,7 +117,7 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 		}
 
 		// if c.Node belongs ExprStmt, remove callExpr for dl
-		found, err = c.findDlInvocationInCallExpr(ctx, cur)
+		found, err = c.findDlInvocationInStmt(ctx, cur)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v", err)
 			return true
@@ -127,24 +153,6 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 		}
 	}
 
-	// overwriting
-	// might be change to GOTMPDIR
-	tmpFile, err := os.CreateTemp("", "_dl.go")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmpFile.Name())
-
-	writer := bufio.NewWriter(tmpFile)
-	defer writer.Flush()
-
-	if err := format.Node(writer, fset, c.astFile); err != nil {
-		return err
-	}
-	if err := os.Rename(tmpFile.Name(), targetFilePath); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -157,25 +165,43 @@ func (c *Clean) findDlImportInImportSpec(ctx context.Context, cr *astutil.Cursor
 	return false, nil
 }
 
-func (c *Clean) findDlInvocationInCallExpr(ctx context.Context, cr *astutil.Cursor) (bool, error) {
+func (c *Clean) findDlInvocationInStmt(ctx context.Context, cr *astutil.Cursor) (bool, error) {
 	switch node := cr.Node().(type) {
 	case *ast.ExprStmt:
 		switch x := node.X.(type) {
 		case *ast.CallExpr:
-			fun, ok := x.Fun.(*ast.SelectorExpr)
-			if !ok {
-				return false, fmt.Errorf("fun is not *ast.SelectorExpr: %v", x.Fun)
+			return c.findDlInvocationInCallExpr(ctx, x, cr.Index())
+		}
+	case *ast.AssignStmt:
+		for _, r := range node.Rhs {
+			switch x := r.(type) {
+			case *ast.CallExpr:
+				return c.findDlInvocationInCallExpr(ctx, x, cr.Index())
 			}
-			x2, ok := fun.X.(*ast.Ident)
-			if !ok {
-				return false, fmt.Errorf("x2 is not *ast.Ident: %v", fun.X)
+		}
+	case *ast.ReturnStmt:
+		for _, r := range node.Results {
+			switch x := r.(type) {
+			case *ast.CallExpr:
+				return c.findDlInvocationInCallExpr(ctx, x, cr.Index())
 			}
-
-			// check node is in a slice
-			return cr.Index() >= 0 && c.dlPkgName == x2.Name, nil
 		}
 	}
 	return false, nil
+}
+
+func (c *Clean) findDlInvocationInCallExpr(ctx context.Context, callExpr *ast.CallExpr, idx int) (bool, error) {
+	fun, ok := callExpr.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return false, fmt.Errorf("fun is not *ast.SelectorExpr: %v", callExpr.Fun)
+	}
+	x2, ok := fun.X.(*ast.Ident)
+	if !ok {
+		return false, fmt.Errorf("x2 is not *ast.Ident: %v", fun.X)
+	}
+
+	// check node is in a slice
+	return idx >= 0 && c.dlPkgName == x2.Name, nil
 }
 
 // Evacuate copies ".go" files to under ".dl" directory.
