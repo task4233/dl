@@ -10,10 +10,12 @@ import (
 	"github.com/go-logr/logr"
 )
 
+// Logger is a struct for preserving *logr.Logger.
 type Logger struct {
 	*logr.Logger
 }
 
+// NewLogger wraps logr.Logger.
 func NewLogger(l *logr.Logger) *Logger {
 	return &Logger{
 		l,
