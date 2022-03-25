@@ -11,18 +11,18 @@ import (
 	"go.uber.org/multierr"
 )
 
-var _ Cmd = (*Init)(nil)
+var _ cmd = (*initCmd)(nil)
 
-// Init structs for $ dl init.
-type Init struct{}
+// initCmd structs for $ dl init.
+type initCmd struct{}
 
-// NewInit for running $ dl init.
-func NewInit() *Init {
-	return &Init{}
+// newInitCmd for running $ dl init.
+func newInitCmd() *initCmd {
+	return &initCmd{}
 }
 
 // Run prepares an environment for dl commands.
-func (i *Init) Run(ctx context.Context, baseDir string) error {
+func (i *initCmd) Run(ctx context.Context, baseDir string) error {
 	// check if hooks directory exists or not
 	if _, err := os.Stat(filepath.Join(baseDir, ".git", "hooks")); os.IsNotExist(err) {
 		return err
@@ -36,7 +36,7 @@ func (i *Init) Run(ctx context.Context, baseDir string) error {
 	err = multierr.Append(err, i.addDlIntoGitIgnore(ctx, baseDir))
 	if err != nil {
 		// rollback
-		if removeErr := NewRemove().Run(ctx, baseDir); err != nil {
+		if removeErr := newRemoveCmd().Run(ctx, baseDir); err != nil {
 			err = multierr.Append(err, removeErr)
 		}
 		return err
@@ -45,19 +45,19 @@ func (i *Init) Run(ctx context.Context, baseDir string) error {
 	return nil
 }
 
-func (i *Init) addGitPreHookScript(ctx context.Context, baseDir string) error {
-	return i.insertCodesIfNotExist(ctx, filepath.Join(baseDir, ".git", "hooks", "pre-commit"), cleanCmd, preCommitScript)
+func (i *initCmd) addGitPreHookScript(ctx context.Context, baseDir string) error {
+	return i.insertCodesIfNotExist(ctx, filepath.Join(baseDir, ".git", "hooks", "pre-commit"), cleanCmdStr, preCommitScript)
 }
 
-func (i *Init) addGitPostHookScript(ctx context.Context, baseDir string) error {
-	return i.insertCodesIfNotExist(ctx, filepath.Join(baseDir, ".git", "hooks", "post-commit"), restoreCmd, postCommitScript)
+func (i *initCmd) addGitPostHookScript(ctx context.Context, baseDir string) error {
+	return i.insertCodesIfNotExist(ctx, filepath.Join(baseDir, ".git", "hooks", "post-commit"), restoreCmdStr, postCommitScript)
 }
 
-func (i *Init) addDlIntoGitIgnore(ctx context.Context, baseDir string) error {
+func (i *initCmd) addDlIntoGitIgnore(ctx context.Context, baseDir string) error {
 	return i.insertCodesIfNotExist(ctx, filepath.Join(baseDir, ".gitignore"), dlDir, fmt.Sprintf("\n%s\n", dlDir))
 }
 
-func (*Init) insertCodesIfNotExist(ctx context.Context, targetFilePath string, checkedCodesIfExists string, addedCodes string) error {
+func (*initCmd) insertCodesIfNotExist(ctx context.Context, targetFilePath string, checkedCodesIfExists string, addedCodes string) error {
 	f, err := os.OpenFile(targetFilePath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0755)
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func (*Init) insertCodesIfNotExist(ctx context.Context, targetFilePath string, c
 	return os.Chmod(targetFilePath, 0755)
 }
 
-func (*Init) createDlDirIfNotExist(ctx context.Context, baseDir string) error {
+func (*initCmd) createDlDirIfNotExist(ctx context.Context, baseDir string) error {
 	path := filepath.Join(baseDir, dlDir)
 	if stat, err := os.Stat(path); err == nil {
 		if stat.IsDir() {

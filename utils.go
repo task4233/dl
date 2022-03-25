@@ -61,19 +61,19 @@ func walkDirWithValidation(ctx context.Context, baseDir string, fn func(ctx cont
 	return nil
 }
 
-// An IntHeap is a min-heap of ints.
-type IntHeap struct {
+// An intHeap is a min-heap of ints.
+type intHeap struct {
 	s  []int
 	mu *sync.Mutex
 }
 
-// NeaIntHeap is a factory function for IntHeap.
+// newintHeap is a factory function for intHeap.
 // heap.Init is done in this function.
-func NewIntHeap(s []int) *IntHeap {
+func newintHeap(s []int) *intHeap {
 	if s == nil {
 		s = []int{}
 	}
-	h := &IntHeap{
+	h := &intHeap{
 		s:  s,
 		mu: new(sync.Mutex),
 	}
@@ -81,17 +81,17 @@ func NewIntHeap(s []int) *IntHeap {
 	return h
 }
 
-func (h IntHeap) Len() int { return len(h.s) }
+func (h intHeap) Len() int { return len(h.s) }
 
 // greater order
-func (h IntHeap) Less(i, j int) bool { return h.s[i] > h.s[j] }
-func (h IntHeap) Swap(i, j int) {
+func (h intHeap) Less(i, j int) bool { return h.s[i] > h.s[j] }
+func (h intHeap) Swap(i, j int) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.s[i], h.s[j] = h.s[j], h.s[i]
 }
 
-func (h *IntHeap) Push(x any) {
+func (h *intHeap) Push(x any) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	// Push and Pop use pointer receivers because they modify the slice's length,
@@ -99,7 +99,7 @@ func (h *IntHeap) Push(x any) {
 	h.s = append(h.s, x.(int))
 }
 
-func (h *IntHeap) Pop() any {
+func (h *intHeap) Pop() any {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	old := h.s

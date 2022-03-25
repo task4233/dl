@@ -23,24 +23,24 @@ const (
 	issueRequest = `\nPlease report this bug to https://github.com/task4233/dl/issues/new/choose if possible🙏\n`
 )
 
-var _ Cmd = (*Clean)(nil)
+var _ cmd = (*cleanCmd)(nil)
 
-type Clean struct {
+type cleanCmd struct {
 	dlPkgName   string
 	removedIdxs heap.Interface
 	astFile     *ast.File
 }
 
-func NewClean() *Clean {
-	return &Clean{
+func newCleanCmd() *cleanCmd {
+	return &cleanCmd{
 		dlPkgName:   "dl", // default package name
-		removedIdxs: NewIntHeap(nil),
+		removedIdxs: newintHeap(nil),
 		astFile:     nil,
 	}
 }
 
 // Run deletes all methods related to dl in ".go" files under the given directory path
-func (c *Clean) Run(ctx context.Context, baseDir string) error {
+func (c *cleanCmd) Run(ctx context.Context, baseDir string) error {
 	dlDirPath := filepath.Join(baseDir, dlDir)
 	if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
 		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", dlDirPath)
@@ -66,7 +66,7 @@ func (c *Clean) Run(ctx context.Context, baseDir string) error {
 
 // Sweep deletes all methods related to dl in a ".go" file.
 // This method requires ".dl" directory to exist.
-func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
+func (c *cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
 	// validation
 	if !strings.HasSuffix(targetFilePath, ".go") {
 		return fmt.Errorf("targetPath is not .go file: %s", targetFilePath)
@@ -104,7 +104,7 @@ func (c *Clean) Sweep(ctx context.Context, targetFilePath string) error {
 	return nil
 }
 
-func (c *Clean) removeDlFromAst(ctx context.Context) error {
+func (c *cleanCmd) removeDlFromAst(ctx context.Context) error {
 	var ok bool
 	c.astFile, ok = astutil.Apply(c.astFile, func(cur *astutil.Cursor) bool {
 		// if c.Node belongs importspec, remove import statement for dl
@@ -158,7 +158,7 @@ func (c *Clean) removeDlFromAst(ctx context.Context) error {
 	return nil
 }
 
-func (c *Clean) findDlImportInImportSpec(ctx context.Context, cr *astutil.Cursor) (bool, error) {
+func (c *cleanCmd) findDlImportInImportSpec(ctx context.Context, cr *astutil.Cursor) (bool, error) {
 	switch node := cr.Node().(type) {
 	case *ast.ImportSpec:
 		return cr.Index() >= 0 && node.Path.Value == dlPackageUrl, nil
@@ -167,7 +167,7 @@ func (c *Clean) findDlImportInImportSpec(ctx context.Context, cr *astutil.Cursor
 	return false, nil
 }
 
-func (c *Clean) findDlInvocationInStmt(ctx context.Context, cr *astutil.Cursor) (bool, error) {
+func (c *cleanCmd) findDlInvocationInStmt(ctx context.Context, cr *astutil.Cursor) (bool, error) {
 	switch node := cr.Node().(type) {
 	case *ast.ExprStmt:
 		switch x := node.X.(type) {
@@ -192,7 +192,7 @@ func (c *Clean) findDlInvocationInStmt(ctx context.Context, cr *astutil.Cursor) 
 	return false, nil
 }
 
-func (c *Clean) findDlInvocationInCallExpr(ctx context.Context, callExpr *ast.CallExpr, idx int) (bool, error) {
+func (c *cleanCmd) findDlInvocationInCallExpr(ctx context.Context, callExpr *ast.CallExpr, idx int) (bool, error) {
 	fun, ok := callExpr.Fun.(*ast.SelectorExpr)
 	if !ok {
 		return false, fmt.Errorf("fun is not *ast.SelectorExpr: %v", callExpr.Fun)
@@ -209,7 +209,7 @@ func (c *Clean) findDlInvocationInCallExpr(ctx context.Context, callExpr *ast.Ca
 // Evacuate copies ".go" files to under ".dl" directory.
 // This method requires ".dl" directory to exist.
 // This method doesn't allow to invoke with a file included in `excludeFiles`.
-func (c Clean) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
+func (c *cleanCmd) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
 	// resolve path
 	rel, err := filepath.Rel(baseDirPath, srcFilePath)
 	if err != nil {

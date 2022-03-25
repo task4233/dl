@@ -44,7 +44,7 @@ func TestInit(t *testing.T) {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			if err := dl.NewInit().Run(context.Background(), tt.baseDir); err != nil {
+			if err := dl.ExportNewInitCmd().Run(context.Background(), tt.baseDir); err != nil {
 				if (err != nil) != tt.wantErr {
 					t.Fatalf("failed Init: err=%v", err)
 				}

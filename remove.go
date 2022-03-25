@@ -9,16 +9,16 @@ import (
 	"path/filepath"
 )
 
-var _ Cmd = (*Remove)(nil)
+var _ cmd = (*removeCmd)(nil)
 
-type Remove struct{}
+type removeCmd struct{}
 
-func NewRemove() *Remove {
-	return &Remove{}
+func newRemoveCmd() *removeCmd {
+	return &removeCmd{}
 }
 
 // Remove removes environment settings for dl commands.
-func (r *Remove) Run(ctx context.Context, baseDir string) error {
+func (r *removeCmd) Run(ctx context.Context, baseDir string) error {
 	if err := r.removeScript(ctx, filepath.Join(baseDir, ".git", "hooks", "pre-commit"), preCommitScript); err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (r *Remove) Run(ctx context.Context, baseDir string) error {
 	return nil
 }
 
-func (r *Remove) removeScript(ctx context.Context, path string, script string) error {
+func (r *removeCmd) removeScript(ctx context.Context, path string, script string) error {
 	buf, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
