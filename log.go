@@ -6,7 +6,21 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/go-logr/logr"
 )
+
+// Logger is a struct for preserving *logr.Logger.
+type Logger struct {
+	*logr.Logger
+}
+
+// NewLogger wraps logr.Logger.
+func NewLogger(l *logr.Logger) *Logger {
+	return &Logger{
+		l,
+	}
+}
 
 // FInfo gives a val, a type, a file name, a line number and writes to w..
 func FInfo[T any](w io.Writer, v T) (int, error) {
