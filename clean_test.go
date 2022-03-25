@@ -69,8 +69,7 @@ func TestClean(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-
-			err := dl.NewClean().Sweep(context.Background(), tt.targetPath)
+			err := dl.ExportNewCleanCmd().Sweep(context.Background(), tt.targetPath)
 			if err != nil {
 				if (err != nil) != tt.wantErr {
 					t.Fatalf("unexpected error, wantError=%v, got=%v", tt.wantErr, err)
@@ -118,7 +117,7 @@ func TestEvacuate(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			err := dl.NewClean().Evacuate(context.Background(), tt.baseDirPath, tt.targetFilePath)
+			err := dl.ExportNewCleanCmd().Evacuate(context.Background(), tt.baseDirPath, tt.targetFilePath)
 
 			if err != nil {
 				if (err != nil) != tt.wantErr {
