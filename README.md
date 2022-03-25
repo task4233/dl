@@ -1,4 +1,4 @@
-dl(Debug x Log) - The instant logger package for debug
+dl - The logger not committed to Git for debug
 ======
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/task4233/dl.svg)](https://pkg.go.dev/github.com/task4233/dl)
@@ -20,7 +20,8 @@ However, some developers forget to delete their logs after resolving the problem
 
 ## Features
 - **Logging package for debug in Go**
-- **Command for Sweeping all functions of this package**
+  - [`dl` provides wrapping function for **logr.Logger**](https://pkg.go.dev/github.com/task4233/dl#NewLogger).
+- **Command for parallel Sweeping all functions of this package**
 - **Command for installing git hooks and .gitignore**
 
 ## Installation
@@ -30,8 +31,9 @@ However, some developers forget to delete their logs after resolving the problem
 $ go install github.com/task4233/dl/cmd/dl@latest
 ```
 
-## Use Case
-### Debug
+## Usage
+
+1. debug your codes with `dl` package
 
 [Playground](https://go.dev/play/p/GRucgd6JhPk)
 ```go
@@ -47,11 +49,13 @@ type U[T any] []T
 
 func (t U[T]) append(v T) {
 	t = append(t, v)
+	// debug
 	dl.Info(t)
 }
 
 func (t U[T]) change(v T) {
 	t[0] = v
+	// debug
 	dl.FInfo(os.Stdout, t)
 }
 
@@ -67,14 +71,14 @@ func main() {
 // [DeLog] info: main.U[int]{5, 3} (main.U[int]) prog.go:18
 ```
 
-### Adds dl into Git hooks
-1. Please run commands below to install dl in your Git repository.
+2. Install dl
 
 ```bash
+$ 
 $ dl init .
 ```
 
-2. Just commit
+3. Just commit
 
 - `delog` is used in the file.
 
