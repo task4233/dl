@@ -66,7 +66,7 @@ func (c *cleanCmd) Run(ctx context.Context, baseDir string) error {
 
 // Sweep deletes all methods related to dl in a ".go" file.
 // This method requires ".dl" directory to exist.
-func (c *cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
+func (c cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
 	// validation
 	if !strings.HasSuffix(targetFilePath, ".go") {
 		return fmt.Errorf("targetPath is not .go file: %s", targetFilePath)
@@ -104,7 +104,7 @@ func (c *cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
 	return nil
 }
 
-func (c *cleanCmd) removeDlFromAst(ctx context.Context) error {
+func (c cleanCmd) removeDlFromAst(ctx context.Context) error {
 	var ok bool
 	c.astFile, ok = astutil.Apply(c.astFile, func(cur *astutil.Cursor) bool {
 		// if c.Node belongs importspec, remove import statement for dl
@@ -209,7 +209,7 @@ func (c *cleanCmd) findDlInvocationInCallExpr(ctx context.Context, callExpr *ast
 // Evacuate copies ".go" files to under ".dl" directory.
 // This method requires ".dl" directory to exist.
 // This method doesn't allow to invoke with a file included in `excludeFiles`.
-func (c *cleanCmd) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
+func (c cleanCmd) Evacuate(ctx context.Context, baseDirPath string, srcFilePath string) error {
 	// resolve path
 	rel, err := filepath.Rel(baseDirPath, srcFilePath)
 	if err != nil {
