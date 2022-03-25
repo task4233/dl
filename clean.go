@@ -39,6 +39,8 @@ func newCleanCmd() *cleanCmd {
 	}
 }
 
+var excludedFiles = []string{dlDir, ".git"}
+
 // Run deletes all methods related to dl in ".go" files under the given directory path
 func (c *cleanCmd) Run(ctx context.Context, baseDir string) error {
 	dlDirPath := filepath.Join(baseDir, dlDir)
@@ -47,8 +49,6 @@ func (c *cleanCmd) Run(ctx context.Context, baseDir string) error {
 	}
 
 	return walkDirWithValidation(ctx, baseDir, func(ctx context.Context, path string, info fs.DirEntry) error {
-		// TODO: make getter
-		excludedFiles := []string{dlDir, ".git"}
 		for _, file := range excludedFiles {
 			if strings.Contains(path, file) {
 				return nil
@@ -58,7 +58,6 @@ func (c *cleanCmd) Run(ctx context.Context, baseDir string) error {
 			return fmt.Errorf("failed to evacuate %s, %s", path, err.Error())
 		}
 
-		// might be good running concurrently? TODO(#7)
 		fmt.Fprintf(os.Stderr, "remove dl from %s\n", path)
 		return c.Sweep(ctx, path)
 	})
