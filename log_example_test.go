@@ -47,7 +47,7 @@ func ExampleFInfo() {
 		age:  15,
 	}
 
-	dl.FInfo(os.Stdout, alice)
+	_, _ = dl.FInfo(os.Stdout, alice)
 	// Output: [DeLog] info: dl_test.person{name:"alice", age:15} (dl_test.person) log_example_test.go:50
 }
 
@@ -92,7 +92,7 @@ func ExampleInfo() {
 
 	// dl.Info prints to sandard error.
 	// [DeLog] info: dl_test.person{name:"alice", age:15} (dl_test.person) log_example_test.go:96
-	dl.Info(alice)
+	_, _ = dl.Info(alice)
 }
 
 func ExamplePrintf() {
