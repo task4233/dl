@@ -125,3 +125,17 @@ func ExamplePrintln() {
 	//
 	dl.Println("name:", alice.name)
 }
+
+func ExampleNewLogger() {
+	zapLog, err := zap.NewDevelopment()
+	if err != nil {
+		panic(fmt.Sprintf("who watches the watchmen (%v)?", err))
+	}
+	var log logr.Logger = zapr.NewLogger(zapLog)
+
+	// You can use your logr.Logger as it is.
+	dlr := dl.NewLogger(&log)
+
+	num := 57
+	dlr.Info("Info: ", "num", num)
+}

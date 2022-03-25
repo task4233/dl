@@ -25,7 +25,7 @@ func (r *restoreCmd) Run(ctx context.Context, baseDir string) error {
 	}
 
 	// check files under .dl directory recursively
-	return walkDirWithValidation(ctx, baseDir, func(path string, info fs.DirEntry) error {
+	return walkDirWithValidation(ctx, baseDir, func(ctx context.Context, path string, info fs.DirEntry) error {
 		idx := strings.Index(path, dlDir)
 		if idx < 0 {
 			return nil
