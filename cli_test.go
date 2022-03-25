@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/task4233/dl"
+	"github.com/task4233/dl/v2"
 )
 
 func init() {

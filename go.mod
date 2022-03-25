@@ -1,4 +1,4 @@
-module github.com/task4233/dl
+module github.com/task4233/dl/v2
 
 go 1.18
 

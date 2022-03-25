@@ -1,6 +1,6 @@
 package main
 
-import "github.com/task4233/dl"
+import "github.com/task4233/dl/v2"
 
 func RangeStmt() {
 	s := []int{1, 3, 5}

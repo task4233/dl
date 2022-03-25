@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	dlPackageUrl = `"github.com/task4233/dl"`
+	dlPackageUrl = `"github.com/task4233/dl/v2"`
 	issueRequest = `\nPlease report this bug to https://github.com/task4233/dl/issues/new/choose if possible🙏\n`
 )
 

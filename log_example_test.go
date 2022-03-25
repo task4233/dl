@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
-	"github.com/task4233/dl"
+	"github.com/task4233/dl/v2"
 	"go.uber.org/zap"
 )
 

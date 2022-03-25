@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/task4233/dl"
+	"github.com/task4233/dl/v2"
 )
 
 func TestFPrintf(t *testing.T) {
