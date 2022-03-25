@@ -25,10 +25,17 @@ However, some developers forget to delete their logs after resolving the problem
 - **Command for installing git hooks and .gitignore**
 
 ## Installation
-### Go1.18
+### Go 1.17 or earlier
+It doesn't contain a generics feature.
 
 ```bash
 $ go install github.com/task4233/dl/cmd/dl@latest
+```
+
+### Go1.18
+
+```bash
+$ go install github.com/task4233/dl/cmd/dl/v2@latest
 ```
 
 ## Usage
