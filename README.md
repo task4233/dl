@@ -32,7 +32,7 @@ It doesn't contain a generics feature.
 $ go install github.com/task4233/dl/cmd/dl@latest
 ```
 
-### Go1.18
+### Go 1.18
 
 ```bash
 $ go install github.com/task4233/dl/cmd/dl/v2@latest
