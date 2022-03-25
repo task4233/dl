@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/task4233/dl"
+	"github.com/task4233/dl/v2"
 )
 
 // main test

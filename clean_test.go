@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/task4233/dl"
+	"github.com/task4233/dl/v2"
 )
 
 func init() {

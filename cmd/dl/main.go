@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/task4233/dl"
+	"github.com/task4233/dl/v2"
 )
 
 var version string

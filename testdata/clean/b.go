@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	d "github.com/task4233/dl"
+	d "github.com/task4233/dl/v2"
 )
 
 func main() {

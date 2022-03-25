@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	dlPackageUrl = `"github.com/task4233/dl"`
-	issueRequest = `\nPlease report this bug to https://github.com/task4233/dl/issues/new/choose if possible🙏\n`
+	dlPackageUrl = `"github.com/task4233/dl/v2"`
+	issueRequest = `\nPlease report this bug to https://github.com/task4233/dl/v2/issues/new/choose if possible🙏\n`
 )
 
 var _ cmd = (*cleanCmd)(nil)
