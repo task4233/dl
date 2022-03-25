@@ -52,7 +52,7 @@ import (
 	"github.com/task4233/dl"
 )
 
-type U[T any] []T
+type U[T interface{}] []T
 
 func (t U[T]) append(v T) {
 	t = append(t, v)
@@ -99,8 +99,8 @@ import (
 	"github.com/task4233/dl"
 )
 
-func SayHi[T any](v T) {
-	dl.Printf("Type: %T, v: %v\n", v, v) // This statement can be removed by `$ dl clean main.go`
+func SayHi(v interface{}) {
+	dl.Printf("v: %v\n", v) // This statement can be removed by `$ dl clean main.go`
 	fmt.Println("Hi, ", v)
 }
 
@@ -135,9 +135,10 @@ index 90a78bd..0e28e8a 100644
 +       "fmt"
 +)
  
-+func SayHi[T any](v T) {
++ func SayHi(v interface{}) {
++	    dl.Printf("v: %v\n", v) // This statement can be removed by `$ dl clean main.go`
 +       fmt.Println("Hi, ", v)
-+}
++ }
 
  func main() {
 +       SayHi("hoge")
@@ -156,8 +157,8 @@ import (
 	"github.com/task4233/dl"
 )
 
-func SayHi[T any](v T) {
-	dl.Printf("Type: %T, v: %v\n", v, v) // This statement can be removed by `$ dl clean main.go`
+func SayHi(v interface{}) {
+	dl.Printf("v: %v\n", v) // This statement can be removed by `$ dl clean main.go`
 	fmt.Println("Hi, ", v)
 }
 

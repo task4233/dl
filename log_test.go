@@ -2,7 +2,6 @@ package dl_test
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 
 	"github.com/task4233/dl"
@@ -13,7 +12,7 @@ func TestFPrintf(t *testing.T) {
 
 	tests := map[string]struct {
 		message string
-		args    []any
+		args    []interface{}
 		want    string
 	}{
 		"success with string": {
@@ -23,7 +22,7 @@ func TestFPrintf(t *testing.T) {
 		},
 		"success with format string": {
 			message: "hoge: %s",
-			args:    []any{"fuga"},
+			args:    []interface{}{"fuga"},
 			want:    "hoge: [fuga]",
 		},
 		"success with empty string": {
@@ -62,7 +61,7 @@ func TestFPrintln(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		args []any
+		args []interface{}
 		want string
 	}{
 		"success with string": {
@@ -70,7 +69,7 @@ func TestFPrintln(t *testing.T) {
 			want: "<nil>\n",
 		},
 		"success with format string": {
-			args: []any{"fuga"},
+			args: []interface{}{"fuga"},
 			want: "[fuga]\n",
 		},
 	}
@@ -90,50 +89,6 @@ func TestFPrintln(t *testing.T) {
 
 			if tt.want != out.String() {
 				t.Fatalf("failed TestPrintf, want=%s,got=%s", tt.want, out.String())
-			}
-		})
-	}
-}
-
-func TestFInfo(t *testing.T) {
-	t.Parallel()
-
-	var (
-		num_     = 1
-		nil_ any = nil
-	)
-
-	tests := map[string]struct {
-		args any
-		want string
-	}{
-		"success with nil": {
-			args: nil,
-			want: "[DeLog] info: nil log_test.go:133\n",
-		},
-		"success with untyped int": {
-			args: 1,
-			want: "[DeLog] info: 1 (int) log_test.go:133\n",
-		},
-		"success with a variable": {
-			args: num_,
-			want: "[DeLog] info: 1 (int) log_test.go:133\n",
-		},
-		"success with a nil variable": {
-			args: nil_,
-			want: "[DeLog] info: nil log_test.go:133\n",
-		},
-	}
-
-	for name, tt := range tests {
-		tt := tt
-
-		t.Run(name, func(t *testing.T) {
-			out := new(bytes.Buffer)
-			dl.FInfo(out, tt.args)
-
-			if !strings.Contains(out.String(), tt.want) {
-				t.Fatalf("failed TestPrintf, \nwant=%s,got=%s", tt.want, out.String())
 			}
 		})
 	}

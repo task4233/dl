@@ -142,7 +142,7 @@ func (c cleanCmd) removeDlFromAst(ctx context.Context) error {
 		}
 	}
 	if !ok {
-		return errors.New("failed type conversion from any to *ast.File")
+		return errors.New("failed type conversion from interface{} to *ast.File")
 	}
 
 	for c.removedIdxs.Len() > 0 {

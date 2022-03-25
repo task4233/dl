@@ -102,7 +102,7 @@ func (h intHeap) Swap(i, j int) {
 	(*s)[i], (*s)[j] = (*s)[j], (*s)[i]
 }
 
-func (h *intHeap) Push(x any) {
+func (h *intHeap) Push(x interface{}) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	// Push and Pop use pointer receivers because they modify the slice's length,
@@ -111,7 +111,7 @@ func (h *intHeap) Push(x any) {
 	*s = append(*s, x.(int))
 }
 
-func (h *intHeap) Pop() any {
+func (h *intHeap) Pop() interface{} {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	old := h.s

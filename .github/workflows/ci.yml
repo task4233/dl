@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - v1
 
 jobs:
   golangci-lint:
@@ -17,14 +18,14 @@ jobs:
       - name: golangci-lint
         uses: reviewdog/action-golangci-lint@v2
         with:
-          go_version: "1.18"
+          go_version: "1.17"
           golangci_lint_flags: "--config=.golangci.yml"
   test:
     name: go-test
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.18' ]
+        go: [ '1.17' ]
     steps:
       - name: Check out code
         uses: actions/checkout@v3
