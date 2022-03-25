@@ -66,7 +66,7 @@ func TestIntHeap(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			h := IntHeap(tt.args)
+			h := intHeap(tt.args)
 			heap.Init(&h)
 
 			got := make([]int, 0, h.Len())

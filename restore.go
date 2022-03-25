@@ -9,16 +9,16 @@ import (
 	"strings"
 )
 
-var _ Cmd = (*Restore)(nil)
+var _ cmd = (*restoreCmd)(nil)
 
-type Restore struct{}
+type restoreCmd struct{}
 
-func NewRestore() *Restore {
-	return &Restore{}
+func newRestoreCmd() *restoreCmd {
+	return &restoreCmd{}
 }
 
-// Restore restores raw files from .dl directory
-func (r *Restore) Run(ctx context.Context, baseDir string) error {
+// restoreCmd restores raw files from .dl directory
+func (r *restoreCmd) Run(ctx context.Context, baseDir string) error {
 	dlDirPath := filepath.Join(baseDir, dlDir)
 	if _, err := os.Stat(dlDirPath); os.IsNotExist(err) {
 		return fmt.Errorf(".dl directory doesn't exist. Please execute $ dl init .: %s", dlDirPath)
