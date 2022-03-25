@@ -43,7 +43,7 @@ func TestCopyFile(t *testing.T) {
 	}
 }
 
-func TestintHeap(t *testing.T) {
+func TestIntHeap(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
