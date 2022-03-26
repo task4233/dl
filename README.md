@@ -20,7 +20,7 @@ However, some developers forget to delete their logs after resolving the problem
 
 ## Features
 - **Logging package for debug in Go**
-  - [`dl` provides wrapping function for **logr.Logger**](https://pkg.go.dev/github.com/task4233/dl#NewLogger).
+  - [`dl` provides wrapping function for **logr.Logger**](https://pkg.go.dev/github.com/task4233/dl/v2#NewLogger).
 - **Command for parallel Sweeping all functions of this package**
 - **Command for installing git hooks and .gitignore**
 
