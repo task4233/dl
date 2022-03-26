@@ -1,7 +1,7 @@
 dl - The logger not committed to Git for debug
 ======
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/task4233/dl.svg)](https://pkg.go.dev/github.com/task4233/dl)
+[![Go Reference](https://pkg.go.dev/badge/github.com/task4233/dl/v2.svg)](https://pkg.go.dev/github.com/task4233/dl/v2)
 [![.github/workflows/ci.yml](https://github.com/task4233/dl/actions/workflows/ci.yml/badge.svg)](https://github.com/task4233/dl/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/task4233/dl)](https://goreportcard.com/report/github.com/task4233/dl)
 [![codecov](https://codecov.io/gh/task4233/dl/branch/main/graph/badge.svg?token=xrhysp4Tzf)](https://codecov.io/gh/task4233/dl)
@@ -29,27 +29,27 @@ However, some developers forget to delete their logs after resolving the problem
 It doesn't contain a generics feature.
 
 ```bash
-$ go install github.com/task4233/dl/cmd/dl@latest
+$ go install github.com/task4233/dl/cmd/dl@v1
 ```
 
 ### Go 1.18
 
 ```bash
-$ go install github.com/task4233/dl/cmd/dl/v2@latest
+$ go install github.com/task4233/dl/cmd/dl@main
 ```
 
 ## Usage
 
 1. debug your codes with `dl` package
 
-[Playground](https://go.dev/play/p/GRucgd6JhPk)
+[Playground](https://go.dev/play/p/Et8JfM-gxZ-)
 ```go
 package main
 
 import (
 	"os"
 
-	"github.com/task4233/dl"
+	"github.com/task4233/dl/v2"
 )
 
 type U[T any] []T
@@ -81,7 +81,6 @@ func main() {
 2. Install dl
 
 ```bash
-$ 
 $ dl init .
 ```
 
@@ -94,18 +93,29 @@ $ cat main.go
 package main
 
 import (
-	"fmt"
-	
-	"github.com/task4233/dl"
+	"os"
+
+	"github.com/task4233/dl/v2"
 )
 
-func SayHi[T any](v T) {
-	dl.Printf("Type: %T, v: %v\n", v, v) // This statement can be removed by `$ dl clean main.go`
-	fmt.Println("Hi, ", v)
+type U[T any] []T
+
+func (t U[T]) append(v T) {
+	t = append(t, v)
+	// debug
+	dl.Info(t)
+}
+
+func (t U[T]) change(v T) {
+	t[0] = v
+	// debug
+	dl.FInfo(os.Stdout, t)
 }
 
 func main() {
-    SayHi("hoge")
+	t := U[int]([]int{1, 3})
+	t.append(5)
+	t.change(5)
 }
 ```
 
@@ -128,20 +138,34 @@ diff --git a/main.go b/main.go
 index 90a78bd..0e28e8a 100644
 --- a/main.go
 +++ b/main.go
-@@ -1,21 +1,12 @@
- package main
-
+@@ -0,0 +1,27 @@
++package main
++
 +import (
-+       "fmt"
++       "os"
++
++       "github.com/task4233/dl/v2"
 +)
- 
-+func SayHi[T any](v T) {
-+       fmt.Println("Hi, ", v)
++
++type U[T any] []T
++
++func (t U[T]) append(v T) {
++       t = append(t, v)
++       // debug
++
 +}
-
- func main() {
-+       SayHi("hoge")
- }
++
++func (t U[T]) change(v T) {
++       t[0] = v
++       // debug
++
++}
++
++func main() {
++       t := U[int]([]int{1, 3})
++       t.append(5)
++       t.change(5)
++}
 ```
 
 - removed `delog` codes are restored(not commited)
@@ -151,18 +175,29 @@ $ cat main.go
 package main
 
 import (
-	"fmt"
-	
-	"github.com/task4233/dl"
+	"os"
+
+	"github.com/task4233/dl/v2"
 )
 
-func SayHi[T any](v T) {
-	dl.Printf("Type: %T, v: %v\n", v, v) // This statement can be removed by `$ dl clean main.go`
-	fmt.Println("Hi, ", v)
+type U[T any] []T
+
+func (t U[T]) append(v T) {
+	t = append(t, v)
+	// debug
+	dl.Info(t)
+}
+
+func (t U[T]) change(v T) {
+	t[0] = v
+	// debug
+	dl.FInfo(os.Stdout, t)
 }
 
 func main() {
-    SayHi("hoge")
+	t := U[int]([]int{1, 3})
+	t.append(5)
+	t.change(5)
 }
 ```
 
