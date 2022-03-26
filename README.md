@@ -32,59 +32,53 @@ However, some developers forget to delete their logs after resolving the problem
 It doesn't contain a generics feature.
 
 ```bash
-$ go install github.com/task4233/dl/cmd/dl@latest
+$ go install github.com/task4233/dl/cmd/dl@v1
 ```
 
 ### Go 1.18
 
 ```bash
-$ go install github.com/task4233/dl/cmd/dl/v2@latest
+$ go install github.com/task4233/dl/cmd/dl@main
 ```
 
 ## Usage
 
 1. debug your codes with `dl` package
 
-[Playground](https://go.dev/play/p/GRucgd6JhPk)
+[Playground](https://go.dev/play/p/PWJAD4tvLLS)
 ```go
 package main
 
 import (
-	"os"
-
 	"github.com/task4233/dl"
 )
 
-type U[T interface{}] []T
+type T []int
 
-func (t U[T]) append(v T) {
+func (t T) append(v int) {
 	t = append(t, v)
-	// debug
-	dl.Info(t)
+	dl.Printf("t: %#v, v: %d\n", t, v)
 }
 
-func (t U[T]) change(v T) {
+func (t T) change(v int) {
 	t[0] = v
-	// debug
-	dl.FInfo(os.Stdout, t)
+	dl.Printf("t: %#v, v: %d\n", t, v)
 }
 
 func main() {
-	t := U[int]([]int{1, 3})
+	var t T = []int{1, 3}
 	t.append(5)
 	t.change(5)
 }
 
-
 // Output:
-// [DeLog] info: main.U[int]{1, 3, 5} (main.U[int]) prog.go:13
-// [DeLog] info: main.U[int]{5, 3} (main.U[int]) prog.go:18
+// t: main.T{1, 3, 5}, v: 5
+// t: main.T{5, 3}, v: 5
 ```
 
 2. Install dl
 
 ```bash
-$ 
 $ dl init .
 ```
 
@@ -97,19 +91,27 @@ $ cat main.go
 package main
 
 import (
-	"fmt"
-	
 	"github.com/task4233/dl"
 )
 
-func SayHi(v interface{}) {
-	dl.Printf("v: %v\n", v) // This statement can be removed by `$ dl clean main.go`
-	fmt.Println("Hi, ", v)
+type T []int
+
+func (t T) append(v int) {
+	t = append(t, v)
+	dl.Printf("t: %#v, v: %d\n", t, v)
+}
+
+func (t T) change(v int) {
+	t[0] = v
+	dl.Printf("t: %#v, v: %d\n", t, v)
 }
 
 func main() {
-    SayHi("hoge")
+	var t T = []int{1, 3}
+	t.append(5)
+	t.change(5)
 }
+
 ```
 
 - invoke `$ git commit`
@@ -126,26 +128,30 @@ remove dl from main.go # automatically removed
 - `delog` is removed automatically
 
 ```bash
-$ git diff HEAD^
-diff --git a/main.go b/main.go
+$ git show HEAD
 index 90a78bd..0e28e8a 100644
 --- a/main.go
 +++ b/main.go
 @@ -1,21 +1,12 @@
- package main
+package main
 
-+import (
-+       "fmt"
-+)
- 
-+ func SayHi(v interface{}) {
-+	    dl.Printf("v: %v\n", v) // This statement can be removed by `$ dl clean main.go`
-+       fmt.Println("Hi, ", v)
-+ }
+type T []int
 
- func main() {
-+       SayHi("hoge")
- }
+func (t T) append(v int) {
+	t = append(t, v)
+
+}
+
+func (t T) change(v int) {
+	t[0] = v
+
+}
+
+func main() {
+	var t T = []int{1, 3}
+	t.append(5)
+	t.change(5)
+}
 ```
 
 - removed `delog` codes are restored(not commited)
@@ -155,18 +161,25 @@ $ cat main.go
 package main
 
 import (
-	"fmt"
-	
 	"github.com/task4233/dl"
 )
 
-func SayHi(v interface{}) {
-	dl.Printf("v: %v\n", v) // This statement can be removed by `$ dl clean main.go`
-	fmt.Println("Hi, ", v)
+type T []int
+
+func (t T) append(v int) {
+	t = append(t, v)
+	dl.Printf("t: %#v, v: %d\n", t, v)
+}
+
+func (t T) change(v int) {
+	t[0] = v
+	dl.Printf("t: %#v, v: %d\n", t, v)
 }
 
 func main() {
-    SayHi("hoge")
+	var t T = []int{1, 3}
+	t.append(5)
+	t.change(5)
 }
 ```
 
