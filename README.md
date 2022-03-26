@@ -1,3 +1,6 @@
+# *NOTICE*
+**If you use Go 1.18 or later, Please use [github.com/task4233/dl/v2](https://pkg.go.dev/github.com/task4233/dl/v2), not github.com/task4233/dl**.
+
 dl - The logger not committed to Git for debug
 ======
 
