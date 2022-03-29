@@ -78,8 +78,6 @@ func (c cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
 		return err
 	}
 
-	ast.Print(fset, c.astFile)
-
 	if err := c.removeDlFromAst(ctx); err != nil {
 		return err
 	}
