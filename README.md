@@ -35,7 +35,7 @@ $ go install github.com/task4233/dl/cmd/dl@v1
 ### Go 1.18
 
 ```bash
-$ go install github.com/task4233/dl/cmd/dl@main
+$ go install github.com/task4233/dl/v2/cmd/dl@main
 ```
 
 ## Usage
