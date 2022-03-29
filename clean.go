@@ -20,7 +20,7 @@ import (
 
 const (
 	dlPackageUrl = `"github.com/task4233/dl/v2"`
-	issueRequest = `\nPlease report this bug to https://github.com/task4233/dl/issues/new/choose if possible🙏\n`
+	issueRequest = "\nPlease report this bug to https://github.com/task4233/dl/issues/new/choose if possible🙏\n"
 )
 
 var _ cmd = (*cleanCmd)(nil)
@@ -78,6 +78,8 @@ func (c cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
 		return err
 	}
 
+	ast.Print(fset, c.astFile)
+
 	if err := c.removeDlFromAst(ctx); err != nil {
 		return err
 	}
@@ -106,7 +108,7 @@ func (c cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
 func (c cleanCmd) removeDlFromAst(ctx context.Context) error {
 	var ok bool
 	c.astFile, ok = astutil.Apply(c.astFile, func(cur *astutil.Cursor) bool {
-		// if c.Node belongs importspec, remove import statement for dl
+		// if c.Node belongs to importspec, remove import statement for dl
 		found, err := c.findDlImportInImportSpec(ctx, cur)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v"+issueRequest, err)
@@ -117,10 +119,10 @@ func (c cleanCmd) removeDlFromAst(ctx context.Context) error {
 			return true
 		}
 
-		// if c.Node belongs ExprStmt, remove callExpr for dl
+		// if c.Node belongs to ExprStmt, remove callExpr for dl
 		found, err = c.findDlInvocationInStmt(ctx, cur)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed findDlImportInImportSpec: %v"+issueRequest, err)
+			fmt.Fprintf(os.Stderr, "failed findDlInvocationInImportSpec: %v"+issueRequest, err)
 			return true
 		}
 		if found {
@@ -192,17 +194,19 @@ func (c *cleanCmd) findDlInvocationInStmt(ctx context.Context, cr *astutil.Curso
 }
 
 func (c *cleanCmd) findDlInvocationInCallExpr(ctx context.Context, callExpr *ast.CallExpr, idx int) (bool, error) {
-	fun, ok := callExpr.Fun.(*ast.SelectorExpr)
-	if !ok {
-		return false, fmt.Errorf("fun is not *ast.SelectorExpr: %v", callExpr.Fun)
-	}
-	x2, ok := fun.X.(*ast.Ident)
-	if !ok {
-		return false, fmt.Errorf("x2 is not *ast.Ident: %v", fun.X)
+	switch fun := callExpr.Fun.(type) {
+	case *ast.SelectorExpr:
+		x2, ok := fun.X.(*ast.Ident)
+		if !ok {
+			return false, fmt.Errorf("x2 is not *ast.Ident: %v", fun.X)
+		}
+
+		// check node is in a slice
+		return idx >= 0 && c.dlPkgName == x2.Name, nil
+	default:
+		return false, nil
 	}
 
-	// check node is in a slice
-	return idx >= 0 && c.dlPkgName == x2.Name, nil
 }
 
 // Evacuate copies ".go" files to under ".dl" directory.
