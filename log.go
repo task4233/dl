@@ -46,14 +46,14 @@ func Info[T any](v T) (int, error) {
 }
 
 // Fprintf formats according to a format specifier and writes to w.
-// Arguments are handled in the manner of fmt.FPrintf.
+// Arguments are handled in the manner of fmt.Fprintf.
 func Fprintf(w io.Writer, format string, v ...any) (int, error) {
 	return fmt.Fprintf(w, format, v...)
 }
 
 // Fprintln formats using the default formats for its operands and writes to w.
 // Spaces are always added between operands and a newline is appended.
-// Arguments are handled in the manner of fmt.FPrintln.
+// Arguments are handled in the manner of fmt.Fprintln.
 func Fprintln(w io.Writer, v ...any) (int, error) {
 	return fmt.Fprintln(w, v...)
 }
