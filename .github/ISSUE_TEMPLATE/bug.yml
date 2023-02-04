@@ -1,5 +1,5 @@
 name: "Bug Report"
-description: Report a bug or a wrong information 
+description: Report a bug or a wrong information.
 labels: ["bug", "pending"]
 body:
   - type: markdown

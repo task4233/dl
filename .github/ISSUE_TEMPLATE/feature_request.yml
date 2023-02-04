@@ -1,5 +1,5 @@
 name: "New feature"
-description: Propose a new feature to be added to dl 
+description: Propose a new feature to be added to dl.
 labels: ["enhancement", "pending"]
 body:
   - type: markdown
