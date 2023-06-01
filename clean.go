@@ -6,16 +6,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go/ast"
-	"go/format"
-	"go/parser"
-	"go/token"
+	"go/ast"    // for treating AST
+	"go/format" // for formatting codes after removing dl statements
+	"go/parser" // for parsing(tokens -> AST)
+	"go/token"  // for a lexical analysis(Go -> tokens)
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/go/ast/astutil"
+	"golang.org/x/tools/go/ast/astutil" // for modifying ast like a swiss-army knife
 )
 
 const (
@@ -71,8 +71,10 @@ func (c cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
 		return fmt.Errorf("targetPath is not .go file: %s", targetFilePath)
 	}
 
+	// For a lexical analysis(Go code -> tokens)
 	fset := token.NewFileSet()
 	var err error
+	// For parsing(token -> AST)
 	c.astFile, err = parser.ParseFile(fset, targetFilePath, nil, parser.ParseComments)
 	if err != nil {
 		return err
@@ -103,8 +105,11 @@ func (c cleanCmd) Sweep(ctx context.Context, targetFilePath string) error {
 	return nil
 }
 
+// removeDlFromAst removes dl statements from AST
 func (c cleanCmd) removeDlFromAst(ctx context.Context) error {
 	var ok bool
+
+	// traverse ast and remove codes related dl such as import statement and
 	c.astFile, ok = astutil.Apply(c.astFile, func(cur *astutil.Cursor) bool {
 		// if c.Node belongs to importspec, remove import statement for dl
 		found, err := c.findDlImportInImportSpec(ctx, cur)

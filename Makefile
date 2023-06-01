@@ -6,7 +6,7 @@ build:
 	go build -o ./bin/dl -trimpath -ldflags "-w -s -X main.version=$(VERSION)" -mod=readonly ./cmd/dl
 
 test:
-	go test -v -race -shuffle=on ./...
+	go test -race -shuffle=on ./...
 
 test-with-coverage:
 	go test -v -race -cover -shuffle=on ./... -coverprofile=cover.out
